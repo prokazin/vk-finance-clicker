@@ -3,26 +3,26 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Finance Clicker — Full Exchange</title>
+  <title>Finance Clicker — Full Exchange (BTC / TON / RUB)</title>
   <link rel="stylesheet" href="style.css" />
-  <!-- TradingView Lightweight Charts -->
   <script src="https://unpkg.com/lightweight-charts@4.4.0/dist/lightweight-charts.standalone.production.js"></script>
 </head>
 <body>
   <div class="app">
     <header>
-      <h1>Finance Clicker — Exchange (Full)</h1>
+      <h1>Finance Clicker — Exchange</h1>
       <div class="top-right">
         <div>Рубли: <b id="rub">1000</b> ₽</div>
         <div>USDT: <b id="usdt">0.00</b></div>
         <div>BTC: <b id="btcBal">0.000000</b></div>
+        <div>TON: <b id="tonBal">0.000000</b></div>
       </div>
     </header>
 
     <main>
       <aside class="left">
         <section class="card clicker">
-          <h2>Кликер — заработай рубли</h2>
+          <h2>Кликер — мгновенные трейды</h2>
           <div class="row">
             <input id="clickStake" type="number" value="50" min="1" />
             <select id="clickType">
@@ -36,13 +36,13 @@
         </section>
 
         <section class="card wallet">
-          <h3>Конвертация</h3>
+          <h3>Обмен/RUB↔USDT</h3>
           <div class="row">
             <input id="convAmount" type="number" value="100" min="1" />
             <button id="rubToUsd">₽ → $</button>
             <button id="usdToRub">$ → ₽</button>
           </div>
-          <div class="row small"><span id="fxRate">Курс: — ₽/$</span></div>
+          <div class="row small"><span id="fxRate">Курс: — ₽ / $</span></div>
         </section>
 
         <section class="card deposit">
@@ -55,19 +55,26 @@
         </section>
 
         <section class="card orders">
-          <h3>Ручная торговля (BTC/USDT)</h3>
+          <h3>Ордеры (BTC, TON)</h3>
           <div class="row">
+            <select id="tradePair">
+              <option value="BTCUSDT">BTC/USDT</option>
+              <option value="TONUSDT">TON/USDT</option>
+            </select>
             <input id="orderAmount" type="number" placeholder="USDT" value="10" />
+          </div>
+          <div class="row">
             <select id="orderType">
               <option value="market">Market</option>
               <option value="limit">Limit</option>
             </select>
-            <input id="orderPrice" type="number" placeholder="Price (для Limit)" step="0.1" />
+            <input id="orderPrice" type="number" placeholder="Price (limit)" step="0.0001" />
           </div>
           <div class="row">
-            <button id="buyBtn" class="primary">Купить BTC</button>
-            <button id="sellBtn" class="danger">Продать BTC</button>
+            <button id="buyBtn" class="primary">Купить</button>
+            <button id="sellBtn" class="danger">Продать</button>
           </div>
+          <div id="openOrders" class="muted small">Ордера: 0</div>
         </section>
       </aside>
 
@@ -76,8 +83,8 @@
           <div id="chartToolbar">
             <select id="pairSelect">
               <option value="BTCUSDT" selected>BTC/USDT</option>
-              <option value="ETHUSDT">ETH/USDT</option>
-              <option value="RUBUSD">RUB/USD (вирт)</option>
+              <option value="TONUSDT">TON/USDT</option>
+              <option value="RUBUSD">RUB/USDT (вирт)</option>
             </select>
             <select id="tfSelect">
               <option value="1m">1m</option>
@@ -108,11 +115,16 @@
           <div>Баланс (в ₽): <b id="totalRub">—</b></div>
           <div>PNL (в $): <b id="totalPnl">$0.00</b></div>
         </section>
+
+        <section class="card open-orders">
+          <h3>Открытые ордера</h3>
+          <div id="ordersList"></div>
+        </section>
       </aside>
     </main>
 
     <footer>
-      <small>Демо-версия — данные крипто через публичный WebSocket Binance, курс RUB↔USD через exchangerate.host. Для продакшена — оформлять API/права.</small>
+      <small>Демо. Данные крипто через Binance WebSocket (публичный), курс RUB↔USD через exchangerate.host. Для продакшена — сервер и защита.</small>
     </footer>
   </div>
 
