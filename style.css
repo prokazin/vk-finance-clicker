@@ -10,14 +10,14 @@ header{display:flex;justify-content:space-between;align-items:center}
 main{display:flex;gap:12px;margin-top:12px}
 .left{width:320px}
 .center{flex:1}
-.right{width:260px}
+.right{width:300px}
 .card{background:var(--card);padding:12px;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,0.5);margin-bottom:12px}
 .row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
 .primary{background:linear-gradient(90deg,var(--accent),#19a84a);border:0;padding:8px 12px;border-radius:8px;color:#001}
 .danger{background:linear-gradient(90deg,var(--danger),#ff7373);border:0;padding:8px 12px;border-radius:8px;color:#001}
 .muted{color:var(--muted);font-size:13px}
 .small{font-size:12px}
-#chartContainer{height:420px}
+#chartContainer{height:440px}
 #chartToolbar{display:flex;gap:10px;align-items:center;margin-bottom:8px}
 ul{padding-left:12px;margin:0}
 ol{padding-left:12px;margin:0}
