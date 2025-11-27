@@ -3,78 +3,120 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Finance Clicker — Биржа (упрощённая)</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <title>Finance Clicker — Full Exchange</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- TradingView Lightweight Charts -->
+  <script src="https://unpkg.com/lightweight-charts@4.4.0/dist/lightweight-charts.standalone.production.js"></script>
 </head>
 <body>
   <div class="app">
     <header>
-      <h1>Finance Clicker</h1>
-      <div class="balances">
-        <div>Рубли: <strong id="rub">1000</strong> ₽</div>
-        <div>Доллары: <strong id="usd">0.00</strong> $</div>
+      <h1>Finance Clicker — Exchange (Full)</h1>
+      <div class="top-right">
+        <div>Рубли: <b id="rub">1000</b> ₽</div>
+        <div>USDT: <b id="usdt">0.00</b></div>
+        <div>BTC: <b id="btcBal">0.000000</b></div>
       </div>
     </header>
 
     <main>
-      <section class="left">
-        <div class="card trade-card">
-          <h2>Сделать трейд</h2>
-          <div class="controls">
-            <label>Ставка (₽) <input id="stake" type="number" value="100" min="1"></label>
-            <label>Тип:
-              <select id="tradeType">
-                <option value="safe">Безопасный</option>
-                <option value="normal" selected>Стандартный</option>
-                <option value="risk">Рискованный</option>
-              </select>
-            </label>
+      <aside class="left">
+        <section class="card clicker">
+          <h2>Кликер — заработай рубли</h2>
+          <div class="row">
+            <input id="clickStake" type="number" value="50" min="1" />
+            <select id="clickType">
+              <option value="safe">Безопасный</option>
+              <option value="normal" selected>Стандарт</option>
+              <option value="risk">Риск</option>
+            </select>
           </div>
-          <button id="tradeBtn" class="big">Сделать трейд</button>
-          <div id="result" class="result">—</div>
-        </div>
+          <button id="clickBtn" class="primary">Сделать трейд (клик)</button>
+          <div id="clickRes" class="muted">—</div>
+        </section>
 
-        <div class="card conv-card">
+        <section class="card wallet">
           <h3>Конвертация</h3>
-          <div class="conv-row">
-            <input id="convAmount" type="number" value="100" min="1">
-            <button id="toUsd">₽ → $</button>
-            <button id="toRub">$ → ₽</button>
+          <div class="row">
+            <input id="convAmount" type="number" value="100" min="1" />
+            <button id="rubToUsd">₽ → $</button>
+            <button id="usdToRub">$ → ₽</button>
           </div>
-          <div id="rateShow">Курс (вирт): <span id="rate">—</span></div>
+          <div class="row small"><span id="fxRate">Курс: — ₽/$</span></div>
+        </section>
+
+        <section class="card deposit">
+          <h3>Вклады (депозит)</h3>
+          <div class="row">
+            <input id="depAmount" type="number" value="10" min="1" />
+            <button id="openDep">Открыть вклад ($)</button>
+          </div>
+          <div id="depInfo" class="muted">Вкладов: 0</div>
+        </section>
+
+        <section class="card orders">
+          <h3>Ручная торговля (BTC/USDT)</h3>
+          <div class="row">
+            <input id="orderAmount" type="number" placeholder="USDT" value="10" />
+            <select id="orderType">
+              <option value="market">Market</option>
+              <option value="limit">Limit</option>
+            </select>
+            <input id="orderPrice" type="number" placeholder="Price (для Limit)" step="0.1" />
+          </div>
+          <div class="row">
+            <button id="buyBtn" class="primary">Купить BTC</button>
+            <button id="sellBtn" class="danger">Продать BTC</button>
+          </div>
+        </section>
+      </aside>
+
+      <section class="center">
+        <div class="card chart">
+          <div id="chartToolbar">
+            <select id="pairSelect">
+              <option value="BTCUSDT" selected>BTC/USDT</option>
+              <option value="ETHUSDT">ETH/USDT</option>
+              <option value="RUBUSD">RUB/USD (вирт)</option>
+            </select>
+            <select id="tfSelect">
+              <option value="1m">1m</option>
+              <option value="5m">5m</option>
+              <option value="15m">15m</option>
+            </select>
+            <span id="marketStatus" class="muted">Market: connecting...</span>
+          </div>
+          <div id="chartContainer"></div>
         </div>
 
-        <div class="card deposit-card">
-          <h3>Вклад (депозит)</h3>
-          <label>Сумма ($) <input id="depAmount" type="number" value="10" min="1"></label>
-          <button id="openDep">Открыть вклад</button>
-          <div id="depInfo">Вкладов: 0</div>
+        <div class="card trades">
+          <h3>Позиции & История</h3>
+          <div id="positionsList"></div>
+          <h4>История</h4>
+          <ul id="historyList"></ul>
         </div>
       </section>
 
-      <section class="right">
-        <div class="card chart-card">
-          <canvas id="chart" height="220"></canvas>
-        </div>
-
-        <div class="card history-card">
-          <h3>История</h3>
-          <ul id="history"></ul>
-        </div>
-
-        <div class="card lb-card">
+      <aside class="right">
+        <section class="card leaderboard">
           <h3>Лидерборд (локально)</h3>
           <ol id="leaderboard"></ol>
-        </div>
-      </section>
+        </section>
+
+        <section class="card stats">
+          <h3>Статистика</h3>
+          <div>Баланс (в ₽): <b id="totalRub">—</b></div>
+          <div>PNL (в $): <b id="totalPnl">$0.00</b></div>
+        </section>
+      </aside>
     </main>
 
     <footer>
-      <small>Демо-игра — не реальная торговля. Вся экономика виртуальная.</small>
+      <small>Демо-версия — данные крипто через публичный WebSocket Binance, курс RUB↔USD через exchangerate.host. Для продакшена — оформлять API/права.</small>
     </footer>
   </div>
 
+  <script src="market.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
