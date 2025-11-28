@@ -3,27 +3,47 @@ class GameScene extends Phaser.Scene {
         super({ key: 'GameScene' });
         this.balance = 1000;
         this.ownedCoins = 0;
-        this.currentPrice = 100;
-        this.priceHistory = [];
+        this.currentCurrencies = [
+            { name: 'VKoin', price: 100, history: [], color: 0x3498db },
+            { name: 'Memecoin', price: 50, history: [], color: 0xe74c3c },
+            { name: 'Social Token', price: 200, history: [], color: 0x9b59b6 }
+        ];
+        this.currentCurrencyIndex = 0;
         this.isHolding = false;
         this.buyPrice = 0;
+        this.stats = {
+            totalTrades: 0,
+            successfulTrades: 0,
+            totalProfit: 0
+        };
+    }
+
+    get currentCurrency() {
+        return this.currentCurrencies[this.currentCurrencyIndex];
+    }
+
+    get currentPrice() {
+        return this.currentCurrency.price;
+    }
+
+    set currentPrice(value) {
+        this.currentCurrency.price = value;
+    }
+
+    get priceHistory() {
+        return this.currentCurrency.history;
     }
 
     init() {
-        // Загружаем сохраненные данные
         this.loadGameData();
     }
 
     create() {
-        // Создаем график
         this.createChart();
-        
-        // Создаем UI
         this.createUI();
         
-        // Запускаем изменение цены
         this.time.addEvent({
-            delay: 100,
+            delay: 200,
             callback: this.updatePrice,
             callbackScope: this,
             loop: true
@@ -31,76 +51,127 @@ class GameScene extends Phaser.Scene {
     }
 
     createChart() {
-        // Инициализируем историю цен
-        for (let i = 0; i < 100; i++) {
-            this.priceHistory.push(this.currentPrice);
-        }
+        this.currentCurrencies.forEach(currency => {
+            for (let i = 0; i < 100; i++) {
+                currency.history.push(currency.price);
+            }
+        });
 
-        // Создаем график
         this.chart = this.add.graphics();
         this.updateChart();
     }
 
     createUI() {
-        // Создаем элементы UI поверх игры
         const uiContainer = document.createElement('div');
         uiContainer.className = 'ui-overlay';
         
-        // Баланс
-        const balanceDiv = document.createElement('div');
-        balanceDiv.className = 'balance';
-        balanceDiv.innerHTML = `
-            <div class="balance-amount">$${this.balance.toFixed(2)}</div>
-            <div class="balance-change" id="balanceChange"></div>
+        const topPanel = document.createElement('div');
+        topPanel.className = 'top-panel';
+        topPanel.innerHTML = `
+            <div class="currency-selector">
+                <button class="btn-currency" id="prevCurrency">←</button>
+                <div class="currency-name" id="currencyName">${this.currentCurrency.name}</div>
+                <button class="btn-currency" id="nextCurrency">→</button>
+            </div>
+            
+            <div class="balance-stats">
+                <div class="balance-section">
+                    <div class="balance-amount">$${this.balance.toFixed(2)}</div>
+                    <div class="balance-change" id="balanceChange"></div>
+                </div>
+                
+                <div class="stats-section">
+                    <div class="stat-item">
+                        Сделки
+                        <span class="stat-value" id="totalTrades">0</span>
+                    </div>
+                    <div class="stat-item">
+                        Успешные
+                        <span class="stat-value" id="successfulTrades">0</span>
+                    </div>
+                    <div class="stat-item">
+                        Прибыль
+                        <span class="stat-value" id="totalProfit">0</span>
+                    </div>
+                    <div class="stat-item">
+                        Баланс
+                        <span class="stat-value">${this.ownedCoins}</span>
+                    </div>
+                </div>
+            </div>
         `;
-        uiContainer.appendChild(balanceDiv);
+        uiContainer.appendChild(topPanel);
 
-        // Кнопки управления
-        const controlsDiv = document.createElement('div');
-        controlsDiv.className = 'controls';
-        controlsDiv.innerHTML = `
-            <button class="btn btn-buy" id="buyBtn">КУПИТЬ</button>
-            <button class="btn btn-sell" id="sellBtn" disabled>ПРОДАТЬ</button>
+        const chartArea = document.createElement('div');
+        chartArea.className = 'chart-area';
+        chartArea.id = 'chart-area';
+        uiContainer.appendChild(chartArea);
+
+        const bottomPanel = document.createElement('div');
+        bottomPanel.className = 'bottom-panel';
+        bottomPanel.innerHTML = `
+            <div class="controls">
+                <button class="btn btn-buy" id="buyBtn">КУПИТЬ</button>
+                <button class="btn btn-sell" id="sellBtn" disabled>ПРОДАТЬ</button>
+            </div>
+            <button class="leaderboard-btn" id="leaderboardBtn">🏆 ТАБЛИЦА ЛИДЕРОВ</button>
         `;
-        uiContainer.appendChild(controlsDiv);
-
-        // Кнопка рейтинга
-        const leaderboardBtn = document.createElement('button');
-        leaderboardBtn.className = 'leaderboard-btn';
-        leaderboardBtn.innerHTML = '🏆';
-        leaderboardBtn.onclick = () => this.showLeaderboard();
-        uiContainer.appendChild(leaderboardBtn);
-
-        // Кнопка поделиться
-        const shareBtn = document.createElement('button');
-        shareBtn.className = 'share-btn';
-        shareBtn.innerHTML = '📤';
-        shareBtn.onclick = () => this.shareResult();
-        uiContainer.appendChild(shareBtn);
+        uiContainer.appendChild(bottomPanel);
 
         document.body.appendChild(uiContainer);
 
-        // Назначаем обработчики
         this.buyBtn = document.getElementById('buyBtn');
         this.sellBtn = document.getElementById('sellBtn');
         this.balanceChange = document.getElementById('balanceChange');
+        this.currencyName = document.getElementById('currencyName');
+        this.prevCurrencyBtn = document.getElementById('prevCurrency');
+        this.nextCurrencyBtn = document.getElementById('nextCurrency');
+        this.totalTradesEl = document.getElementById('totalTrades');
+        this.successfulTradesEl = document.getElementById('successfulTrades');
+        this.totalProfitEl = document.getElementById('totalProfit');
+        this.leaderboardBtn = document.getElementById('leaderboardBtn');
 
         this.buyBtn.onclick = () => this.buyCoin();
         this.sellBtn.onclick = () => this.sellCoin();
+        this.prevCurrencyBtn.onclick = () => this.switchCurrency(-1);
+        this.nextCurrencyBtn.onclick = () => this.switchCurrency(1);
+        this.leaderboardBtn.onclick = () => this.showLeaderboard();
+
+        this.updateStatsUI();
+    }
+
+    switchCurrency(direction) {
+        if (this.isHolding) return;
+        
+        this.currentCurrencyIndex += direction;
+        if (this.currentCurrencyIndex < 0) {
+            this.currentCurrencyIndex = this.currentCurrencies.length - 1;
+        } else if (this.currentCurrencyIndex >= this.currentCurrencies.length) {
+            this.currentCurrencyIndex = 0;
+        }
+        
+        this.currencyName.textContent = this.currentCurrency.name;
+        this.updateChart();
+        this.updateUI();
     }
 
     updatePrice() {
-        // Генерируем случайное изменение цены (-2% до +2%)
-        const changePercent = (Math.random() - 0.5) * 4;
-        this.currentPrice *= (1 + changePercent / 100);
+        const currency = this.currentCurrency;
         
-        // Ограничиваем минимальную цену
-        this.currentPrice = Math.max(this.currentPrice, 10);
+        const volatility = {
+            'VKoin': 1.5,
+            'Memecoin': 3.0,
+            'Social Token': 0.8
+        }[currency.name];
         
-        // Добавляем в историю
-        this.priceHistory.push(this.currentPrice);
-        if (this.priceHistory.length > 100) {
-            this.priceHistory.shift();
+        const changePercent = (Math.random() - 0.5) * volatility;
+        currency.price *= (1 + changePercent / 100);
+        
+        currency.price = Math.max(currency.price, 1);
+        
+        currency.history.push(currency.price);
+        if (currency.history.length > 100) {
+            currency.history.shift();
         }
         
         this.updateChart();
@@ -110,19 +181,20 @@ class GameScene extends Phaser.Scene {
     updateChart() {
         this.chart.clear();
         
-        const width = this.sys.game.config.width;
-        const height = this.sys.game.config.height;
+        const chartArea = document.getElementById('chart-area');
+        const width = chartArea.offsetWidth;
+        const height = chartArea.offsetHeight;
         
-        // Находим мин и макс значения для масштабирования
-        const minPrice = Math.min(...this.priceHistory);
-        const maxPrice = Math.max(...this.priceHistory);
+        const history = this.priceHistory;
+        
+        const minPrice = Math.min(...history);
+        const maxPrice = Math.max(...history);
         const range = maxPrice - minPrice || 1;
         
-        // Рисуем линию графика
-        this.chart.lineStyle(3, 0x3498db, 1);
+        this.chart.lineStyle(3, this.currentCurrency.color, 1);
         
-        this.priceHistory.forEach((price, index) => {
-            const x = (index / (this.priceHistory.length - 1)) * width;
+        history.forEach((price, index) => {
+            const x = (index / (history.length - 1)) * width;
             const y = height - ((price - minPrice) / range) * height * 0.8 - height * 0.1;
             
             if (index === 0) {
@@ -137,6 +209,7 @@ class GameScene extends Phaser.Scene {
 
     updateUI() {
         document.querySelector('.balance-amount').textContent = `$${this.balance.toFixed(2)}`;
+        document.querySelector('.stat-item:nth-child(4) .stat-value').textContent = this.ownedCoins;
         
         if (this.isHolding) {
             const profit = (this.currentPrice - this.buyPrice) * this.ownedCoins;
@@ -147,6 +220,12 @@ class GameScene extends Phaser.Scene {
         } else {
             this.balanceChange.textContent = '';
         }
+    }
+
+    updateStatsUI() {
+        this.totalTradesEl.textContent = this.stats.totalTrades;
+        this.successfulTradesEl.textContent = this.stats.successfulTrades;
+        this.totalProfitEl.textContent = this.stats.totalProfit.toFixed(2);
     }
 
     buyCoin() {
@@ -169,6 +248,14 @@ class GameScene extends Phaser.Scene {
     sellCoin() {
         if (!this.isHolding) return;
         
+        const profit = (this.currentPrice - this.buyPrice) * this.ownedCoins;
+        
+        this.stats.totalTrades++;
+        if (profit > 0) {
+            this.stats.successfulTrades++;
+        }
+        this.stats.totalProfit += profit;
+        
         this.balance += this.ownedCoins * this.currentPrice;
         this.ownedCoins = 0;
         this.isHolding = false;
@@ -176,15 +263,28 @@ class GameScene extends Phaser.Scene {
         this.buyBtn.disabled = false;
         this.sellBtn.disabled = true;
         
+        this.updateStatsUI();
         this.saveGameData();
     }
 
     async loadGameData() {
         try {
             if (window.VK) {
-                const data = await VK.call('storage.get', { keys: ['balance', 'ownedCoins'] });
+                const data = await VK.call('storage.get', { 
+                    keys: ['balance', 'ownedCoins', 'stats', 'currencies'] 
+                });
                 if (data.balance) this.balance = parseFloat(data.balance);
                 if (data.ownedCoins) this.ownedCoins = parseInt(data.ownedCoins);
+                if (data.stats) this.stats = JSON.parse(data.stats);
+                if (data.currencies) {
+                    const saved = JSON.parse(data.currencies);
+                    this.currentCurrencies.forEach((currency, index) => {
+                        if (saved[index]) {
+                            currency.price = saved[index].price;
+                            currency.history = saved[index].history || [currency.price];
+                        }
+                    });
+                }
                 this.isHolding = this.ownedCoins > 0;
             }
         } catch (error) {
@@ -197,7 +297,9 @@ class GameScene extends Phaser.Scene {
             if (window.VK) {
                 await VK.call('storage.set', {
                     balance: this.balance.toString(),
-                    ownedCoins: this.ownedCoins.toString()
+                    ownedCoins: this.ownedCoins.toString(),
+                    stats: JSON.stringify(this.stats),
+                    currencies: JSON.stringify(this.currentCurrencies)
                 });
             }
         } catch (error) {
@@ -208,7 +310,6 @@ class GameScene extends Phaser.Scene {
     async showLeaderboard() {
         try {
             if (window.VK) {
-                // Показываем рейтинг друзей
                 VK.call('showLeaderboardBox', { user_result: Math.floor(this.balance) });
             } else {
                 alert(`Ваш баланс: $${this.balance.toFixed(2)}`);
@@ -217,47 +318,27 @@ class GameScene extends Phaser.Scene {
             alert(`Ваш баланс: $${this.balance.toFixed(2)}`);
         }
     }
-
-    async shareResult() {
-        try {
-            if (window.VK) {
-                VK.call('wall.post', {
-                    message: `Я только что заработал ${this.balance.toFixed(2)} VK-долларов в Крипто-Гонке! Сможешь побить мой рекорд? 🚀`
-                });
-            } else {
-                // Для тестирования вне VK
-                const text = `Мой результат: $${this.balance.toFixed(2)} в Крипто-Гонке!`;
-                if (navigator.share) {
-                    navigator.share({ text });
-                } else if (navigator.clipboard) {
-                    navigator.clipboard.writeText(text);
-                    alert('Результат скопирован в буфер обмена!');
-                }
-            }
-        } catch (error) {
-            console.log('Ошибка при публикации:', error);
-        }
-    }
 }
 
-// Конфигурация Phaser
 const config = {
     type: Phaser.AUTO,
-    width: 400,
-    height: 600,
     parent: 'game-container',
     backgroundColor: '#f8f9fa',
-    scene: GameScene
+    scene: GameScene,
+    scale: {
+        mode: Phaser.Scale.RESIZE,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        width: '100%',
+        height: '100%'
+    }
 };
 
-// Запуск игры когда VK Bridge готов
 window.addEventListener('DOMContentLoaded', () => {
     if (window.VK) {
         VK.init(() => {
             new Phaser.Game(config);
         });
     } else {
-        // Запуск без VK для тестирования
         new Phaser.Game(config);
     }
 });
