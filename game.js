@@ -6,11 +6,13 @@ class GameScene extends Phaser.Scene {
         this.ownedCoins = 0;
         this.isHolding = false;
         this.buyPrice = 0;
+        this.stopLoss = 0;
+        this.takeProfit = 0;
         
         this.currencies = [
-            { name: 'VKoin', price: 100, history: [], color: 0x3498db, volatility: 1.5 },
-            { name: 'Memecoin', price: 50, history: [], color: 0xe74c3c, volatility: 3.0 },
-            { name: 'Social Token', price: 200, history: [], color: 0x9b59b6, volatility: 0.8 }
+            { name: 'VKoin', price: 100, history: [], color: 0x3498db, volatility: 0.8 },
+            { name: 'Memecoin', price: 50, history: [], color: 0xe74c3c, volatility: 1.5 },
+            { name: 'Social Token', price: 200, history: [], color: 0x9b59b6, volatility: 0.5 }
         ];
         this.currentCurrencyIndex = 0;
         
@@ -20,13 +22,7 @@ class GameScene extends Phaser.Scene {
             totalProfit: 0
         };
         
-        // UI элементы
-        this.balanceText = null;
-        this.currencyText = null;
-        this.profitText = null;
-        this.statsText = null;
-        this.buyButton = null;
-        this.sellButton = null;
+        this.uiElements = {};
     }
 
     get currentCurrency() {
@@ -36,12 +32,12 @@ class GameScene extends Phaser.Scene {
     create() {
         this.loadGameData();
         this.createChart();
-        this.createUI();
+        this.createCompactUI();
         this.setupEventListeners();
         
-        // Запускаем обновление цены
+        // Еще более медленное обновление
         this.time.addEvent({
-            delay: 200,
+            delay: 300,
             callback: this.updatePrice,
             callbackScope: this,
             loop: true
@@ -49,10 +45,9 @@ class GameScene extends Phaser.Scene {
     }
 
     createChart() {
-        // Инициализируем историю цен
         this.currencies.forEach(currency => {
             currency.history = [];
-            for (let i = 0; i < 50; i++) {
+            for (let i = 0; i < 40; i++) {
                 currency.history.push(currency.price);
             }
         });
@@ -61,96 +56,93 @@ class GameScene extends Phaser.Scene {
         this.updateChart();
     }
 
-    createUI() {
+    createCompactUI() {
         const centerX = this.cameras.main.centerX;
         
-        // Верхняя панель - название валюты
-        this.currencyText = this.add.text(centerX, 20, this.currentCurrency.name, {
-            fontSize: '24px',
-            fill: '#2c3e50',
-            fontFamily: 'Arial',
-            fontWeight: 'bold'
-        }).setOrigin(0.5);
-
-        // Кнопки переключения валют
-        this.prevButton = this.add.text(50, 20, '←', {
-            fontSize: '24px',
-            fill: '#3498db',
-            fontFamily: 'Arial',
-            fontWeight: 'bold'
-        }).setInteractive();
-
-        this.nextButton = this.add.text(350, 20, '→', {
-            fontSize: '24px',
-            fill: '#3498db',
-            fontFamily: 'Arial',
-            fontWeight: 'bold'
-        }).setInteractive();
-
-        // Баланс
-        this.balanceText = this.add.text(centerX, 60, `Баланс: $${this.balance.toFixed(2)}`, {
+        // Верхняя строка - валюта и баланс
+        this.uiElements.currencyText = this.add.text(centerX, 15, this.currentCurrency.name, {
             fontSize: '20px',
             fill: '#2c3e50',
+            fontFamily: 'Arial',
+            fontWeight: 'bold'
+        }).setOrigin(0.5);
+
+        this.uiElements.balanceText = this.add.text(centerX, 40, `$${this.balance.toFixed(0)}`, {
+            fontSize: '18px',
+            fill: '#2c3e50',
             fontFamily: 'Arial'
         }).setOrigin(0.5);
 
-        // Прибыль/убыток
-        this.profitText = this.add.text(centerX, 85, '', {
-            fontSize: '16px',
-            fill: '#27ae60',
+        // Кнопки переключения валют (меньше)
+        this.uiElements.prevButton = this.add.text(30, 28, '←', {
+            fontSize: '20px',
+            fill: '#3498db',
             fontFamily: 'Arial'
-        }).setOrigin(0.5);
+        }).setInteractive();
 
-        // Статистика
-        this.statsText = this.add.text(centerX, 110, this.getStatsString(), {
-            fontSize: '14px',
+        this.uiElements.nextButton = this.add.text(370, 28, '→', {
+            fontSize: '20px',
+            fill: '#3498db',
+            fontFamily: 'Arial'
+        }).setInteractive();
+
+        // Статистика в одну строку (компактнее)
+        this.uiElements.statsText = this.add.text(centerX, 65, this.getCompactStats(), {
+            fontSize: '12px',
             fill: '#666',
             fontFamily: 'Arial'
         }).setOrigin(0.5);
 
-        // Кнопка покупки
-        this.buyButton = this.add.rectangle(centerX - 80, 500, 140, 50, 0x27ae60)
-            .setInteractive();
-        this.add.text(centerX - 80, 500, 'КУПИТЬ', {
-            fontSize: '18px',
-            fill: '#FFFFFF',
-            fontFamily: 'Arial',
-            fontWeight: 'bold'
+        // Прибыль/убыток
+        this.uiElements.profitText = this.add.text(centerX, 85, '', {
+            fontSize: '14px',
+            fill: '#27ae60',
+            fontFamily: 'Arial'
         }).setOrigin(0.5);
 
-        // Кнопка продажи
-        this.sellButton = this.add.rectangle(centerX + 80, 500, 140, 50, 0xe74c3c)
+        // Кнопки управления (меньше)
+        this.uiElements.buyButton = this.add.rectangle(centerX - 70, 520, 120, 40, 0x27ae60)
             .setInteractive();
-        this.add.text(centerX + 80, 500, 'ПРОДАТЬ', {
-            fontSize: '18px',
-            fill: '#FFFFFF',
-            fontFamily: 'Arial',
-            fontWeight: 'bold'
-        }).setOrigin(0.5);
-
-        // Кнопка таблицы лидеров
-        this.leaderboardButton = this.add.rectangle(centerX, 560, 300, 40, 0x3498db)
-            .setInteractive();
-        this.add.text(centerX, 560, '🏆 ТАБЛИЦА ЛИДЕРОВ', {
+        this.add.text(centerX - 70, 520, 'КУПИТЬ', {
             fontSize: '16px',
             fill: '#FFFFFF',
             fontFamily: 'Arial'
         }).setOrigin(0.5);
 
+        this.uiElements.sellButton = this.add.rectangle(centerX + 70, 520, 120, 40, 0xe74c3c)
+            .setInteractive();
+        this.add.text(centerX + 70, 520, 'ПРОДАТЬ', {
+            fontSize: '16px',
+            fill: '#FFFFFF',
+            fontFamily: 'Arial'
+        }).setOrigin(0.5);
+
+        // Кнопка стоп-ордеров
+        this.uiElements.stopButton = this.add.rectangle(centerX, 470, 140, 35, 0xf39c12)
+            .setInteractive();
+        this.add.text(centerX, 470, 'СТОП-ОРДЕР', {
+            fontSize: '14px',
+            fill: '#FFFFFF',
+            fontFamily: 'Arial'
+        }).setOrigin(0.5);
+
+        // Отображение стоп-ордеров
+        this.uiElements.stopInfo = this.add.text(centerX, 440, '', {
+            fontSize: '12px',
+            fill: '#e67e22',
+            fontFamily: 'Arial'
+        }).setOrigin(0.5);
+
         this.updateButtonStates();
+        this.updateStopInfo();
     }
 
     setupEventListeners() {
-        // Переключение валют
-        this.prevButton.on('pointerdown', () => this.switchCurrency(-1));
-        this.nextButton.on('pointerdown', () => this.switchCurrency(1));
-
-        // Кнопки покупки/продажи
-        this.buyButton.on('pointerdown', () => this.buyCoin());
-        this.sellButton.on('pointerdown', () => this.sellCoin());
-
-        // Таблица лидеров
-        this.leaderboardButton.on('pointerdown', () => this.showLeaderboard());
+        this.uiElements.prevButton.on('pointerdown', () => this.switchCurrency(-1));
+        this.uiElements.nextButton.on('pointerdown', () => this.switchCurrency(1));
+        this.uiElements.buyButton.on('pointerdown', () => this.buyCoin());
+        this.uiElements.sellButton.on('pointerdown', () => this.sellCoin());
+        this.uiElements.stopButton.on('pointerdown', () => this.setStopOrder());
     }
 
     switchCurrency(direction) {
@@ -163,24 +155,53 @@ class GameScene extends Phaser.Scene {
             this.currentCurrencyIndex = 0;
         }
         
-        this.currencyText.setText(this.currentCurrency.name);
+        this.uiElements.currencyText.setText(this.currentCurrency.name);
         this.updateChart();
         this.updateUI();
     }
 
     updatePrice() {
         const currency = this.currentCurrency;
-        const changePercent = (Math.random() - 0.5) * currency.volatility;
+        
+        // Еще более плавное изменение цены
+        const changePercent = (Math.random() - 0.5) * currency.volatility * 0.7;
         currency.price *= (1 + changePercent / 100);
         currency.price = Math.max(currency.price, 1);
         
         currency.history.push(currency.price);
-        if (currency.history.length > 50) {
+        if (currency.history.length > 40) {
             currency.history.shift();
         }
         
+        // Проверка стоп-ордеров
+        this.checkStopOrders();
+        
         this.updateChart();
         this.updateUI();
+    }
+
+    checkStopOrders() {
+        if (this.isHolding && this.stopLoss > 0) {
+            if (this.currentCurrency.price <= this.stopLoss) {
+                this.sellCoin();
+                this.add.text(this.cameras.main.centerX, 300, 'СТОП-ЛОСС СРАБОТАЛ!', {
+                    fontSize: '16px',
+                    fill: '#e74c3c',
+                    fontFamily: 'Arial'
+                }).setOrigin(0.5);
+            }
+        }
+        
+        if (this.isHolding && this.takeProfit > 0) {
+            if (this.currentCurrency.price >= this.takeProfit) {
+                this.sellCoin();
+                this.add.text(this.cameras.main.centerX, 300, 'ТЕЙК-ПРОФИТ СРАБОТАЛ!', {
+                    fontSize: '16px',
+                    fill: '#27ae60',
+                    fontFamily: 'Arial'
+                }).setOrigin(0.5);
+            }
+        }
     }
 
     updateChart() {
@@ -188,55 +209,81 @@ class GameScene extends Phaser.Scene {
         
         const history = this.currentCurrency.history;
         const width = 380;
-        const height = 250;
-        const startY = 150;
+        const height = 280; // Увеличили высоту графика
+        const startY = 100; // Сдвинули график выше
         
         const minPrice = Math.min(...history);
         const maxPrice = Math.max(...history);
         const range = maxPrice - minPrice || 1;
         
         // Рисуем линию графика
-        this.chart.lineStyle(3, this.currentCurrency.color, 1);
+        this.chart.lineStyle(2, this.currentCurrency.color, 1);
         
-        history.forEach((price, index) => {
-            const x = 10 + (index / (history.length - 1)) * width;
-            const y = startY + height - ((price - minPrice) / range) * height;
+        // Более плавное отображение
+        for (let i = 0; i < history.length - 1; i++) {
+            const x1 = 10 + (i / (history.length - 1)) * width;
+            const y1 = startY + height - ((history[i] - minPrice) / range) * height;
+            const x2 = 10 + ((i + 1) / (history.length - 1)) * width;
+            const y2 = startY + height - ((history[i + 1] - minPrice) / range) * height;
             
-            if (index === 0) {
-                this.chart.moveTo(x, y);
-            } else {
-                this.chart.lineTo(x, y);
-            }
-        });
+            this.chart.lineBetween(x1, y1, x2, y2);
+        }
         
-        this.chart.strokePath();
+        // Рисуем линии стоп-ордеров если они установлены
+        if (this.isHolding) {
+            if (this.stopLoss > 0 && this.stopLoss >= minPrice && this.stopLoss <= maxPrice) {
+                const stopY = startY + height - ((this.stopLoss - minPrice) / range) * height;
+                this.chart.lineStyle(1, 0xe74c3c, 0.7);
+                this.chart.lineBetween(10, stopY, width + 10, stopY);
+                this.add.text(20, stopY - 10, 'STOP', { fontSize: '10px', fill: '#e74c3c' });
+            }
+            
+            if (this.takeProfit > 0 && this.takeProfit >= minPrice && this.takeProfit <= maxPrice) {
+                const profitY = startY + height - ((this.takeProfit - minPrice) / range) * height;
+                this.chart.lineStyle(1, 0x27ae60, 0.7);
+                this.chart.lineBetween(10, profitY, width + 10, profitY);
+                this.add.text(20, profitY - 10, 'PROFIT', { fontSize: '10px', fill: '#27ae60' });
+            }
+        }
     }
 
     updateUI() {
-        this.balanceText.setText(`Баланс: $${this.balance.toFixed(2)}`);
-        this.statsText.setText(this.getStatsString());
+        this.uiElements.balanceText.setText(`$${this.balance.toFixed(0)}`);
+        this.uiElements.statsText.setText(this.getCompactStats());
         
         if (this.isHolding) {
             const profit = (this.currentCurrency.price - this.buyPrice) * this.ownedCoins;
             const profitPercent = ((this.currentCurrency.price - this.buyPrice) / this.buyPrice) * 100;
             
-            this.profitText.setText(`${profit >= 0 ? '+' : ''}${profit.toFixed(2)} (${profitPercent.toFixed(2)}%)`);
-            this.profitText.setFill(profit >= 0 ? '#27ae60' : '#e74c3c');
+            this.uiElements.profitText.setText(`${profit >= 0 ? '+' : ''}${profit.toFixed(0)} (${profitPercent.toFixed(1)}%)`);
+            this.uiElements.profitText.setFill(profit >= 0 ? '#27ae60' : '#e74c3c');
         } else {
-            this.profitText.setText('');
+            this.uiElements.profitText.setText('');
         }
         
         this.updateButtonStates();
+        this.updateStopInfo();
     }
 
     updateButtonStates() {
-        // Визуальное отключение кнопок
-        this.buyButton.setAlpha(this.isHolding ? 0.5 : 1);
-        this.sellButton.setAlpha(this.isHolding ? 1 : 0.5);
+        this.uiElements.buyButton.setAlpha(this.isHolding ? 0.5 : 1);
+        this.uiElements.sellButton.setAlpha(this.isHolding ? 1 : 0.5);
+        this.uiElements.stopButton.setAlpha(this.isHolding ? 1 : 0.5);
     }
 
-    getStatsString() {
-        return `Сделки: ${this.stats.totalTrades} | Успешные: ${this.stats.successfulTrades} | Прибыль: $${this.stats.totalProfit.toFixed(2)} | Монет: ${this.ownedCoins}`;
+    updateStopInfo() {
+        if (this.isHolding) {
+            let info = '';
+            if (this.stopLoss > 0) info += `STOP: $${this.stopLoss.toFixed(1)} `;
+            if (this.takeProfit > 0) info += `PROFIT: $${this.takeProfit.toFixed(1)}`;
+            this.uiElements.stopInfo.setText(info);
+        } else {
+            this.uiElements.stopInfo.setText('');
+        }
+    }
+
+    getCompactStats() {
+        return `Сделки:${this.stats.totalTrades} Успешные:${this.stats.successfulTrades} Прибыль:$${this.stats.totalProfit.toFixed(0)}`;
     }
 
     buyCoin() {
@@ -248,6 +295,9 @@ class GameScene extends Phaser.Scene {
             this.buyPrice = this.currentCurrency.price;
             this.balance -= coinsToBuy * this.currentCurrency.price;
             this.isHolding = true;
+            // Сбрасываем стоп-ордера при новой покупке
+            this.stopLoss = 0;
+            this.takeProfit = 0;
             
             this.updateUI();
             this.saveGameData();
@@ -268,20 +318,46 @@ class GameScene extends Phaser.Scene {
         this.balance += this.ownedCoins * this.currentCurrency.price;
         this.ownedCoins = 0;
         this.isHolding = false;
+        this.stopLoss = 0;
+        this.takeProfit = 0;
         
         this.updateUI();
         this.saveGameData();
+    }
+
+    setStopOrder() {
+        if (!this.isHolding) return;
+        
+        // Простая реализация - устанавливаем стоп-лосс на 5% ниже и тейк-профит на 10% выше
+        this.stopLoss = this.buyPrice * 0.95;
+        this.takeProfit = this.buyPrice * 1.10;
+        
+        this.updateUI();
+        this.saveGameData();
+        
+        // Временное сообщение
+        const message = this.add.text(this.cameras.main.centerX, 400, 'Стоп-ордера установлены!', {
+            fontSize: '14px',
+            fill: '#f39c12',
+            fontFamily: 'Arial'
+        }).setOrigin(0.5);
+        
+        this.time.delayedCall(2000, () => {
+            message.destroy();
+        });
     }
 
     async loadGameData() {
         try {
             if (window.VK) {
                 const data = await VK.call('storage.get', { 
-                    keys: ['balance', 'ownedCoins', 'stats'] 
+                    keys: ['balance', 'ownedCoins', 'stats', 'stopLoss', 'takeProfit'] 
                 });
                 if (data.balance) this.balance = parseFloat(data.balance);
                 if (data.ownedCoins) this.ownedCoins = parseInt(data.ownedCoins);
                 if (data.stats) this.stats = JSON.parse(data.stats);
+                if (data.stopLoss) this.stopLoss = parseFloat(data.stopLoss);
+                if (data.takeProfit) this.takeProfit = parseFloat(data.takeProfit);
                 this.isHolding = this.ownedCoins > 0;
             }
         } catch (error) {
@@ -295,23 +371,13 @@ class GameScene extends Phaser.Scene {
                 await VK.call('storage.set', {
                     balance: this.balance.toString(),
                     ownedCoins: this.ownedCoins.toString(),
-                    stats: JSON.stringify(this.stats)
+                    stats: JSON.stringify(this.stats),
+                    stopLoss: this.stopLoss.toString(),
+                    takeProfit: this.takeProfit.toString()
                 });
             }
         } catch (error) {
             console.log('Не удалось сохранить данные:', error);
-        }
-    }
-
-    async showLeaderboard() {
-        try {
-            if (window.VK) {
-                VK.call('showLeaderboardBox', { user_result: Math.floor(this.balance) });
-            } else {
-                alert(`Ваш баланс: $${this.balance.toFixed(2)}`);
-            }
-        } catch (error) {
-            alert(`Ваш баланс: $${this.balance.toFixed(2)}`);
         }
     }
 }
@@ -319,7 +385,7 @@ class GameScene extends Phaser.Scene {
 const config = {
     type: Phaser.AUTO,
     width: 400,
-    height: 600,
+    height: 570, // Уменьшили высоту для телефонов
     parent: 'game-container',
     backgroundColor: '#f8f9fa',
     scene: GameScene
