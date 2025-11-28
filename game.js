@@ -244,6 +244,13 @@ class GameScene extends Phaser.Scene {
                 return this.news[Math.floor(Math.random() * this.news.length)];
             }
         };
+
+        this.layout = {
+            padding: 20,
+            headerHeight: 120,
+            chartHeight: 280,
+            buttonHeight: 180
+        };
     }
 
     get currentCurrency() {
@@ -252,6 +259,9 @@ class GameScene extends Phaser.Scene {
 
     create() {
         console.log('Сцена создается');
+        
+        // Рассчитываем layout на основе размера экрана
+        this.calculateLayout();
         
         // Инициализация данных
         this.currencies.forEach(currency => {
@@ -284,6 +294,28 @@ class GameScene extends Phaser.Scene {
         console.log('Игра запущена успешно');
     }
 
+    calculateLayout() {
+        const { width, height } = this.cameras.main;
+        
+        // Адаптивные размеры для разных экранов
+        if (height < 600) {
+            // Маленькие экраны
+            this.layout.headerHeight = 100;
+            this.layout.chartHeight = 220;
+            this.layout.buttonHeight = 150;
+        } else if (height > 700) {
+            // Большие экраны
+            this.layout.headerHeight = 140;
+            this.layout.chartHeight = 320;
+            this.layout.buttonHeight = 200;
+        } else {
+            // Стандартные экраны
+            this.layout.headerHeight = 120;
+            this.layout.chartHeight = 280;
+            this.layout.buttonHeight = 180;
+        }
+    }
+
     createChart() {
         this.chart = this.add.graphics();
         this.ordersGraphics = this.add.graphics();
@@ -291,32 +323,37 @@ class GameScene extends Phaser.Scene {
     }
 
     createUI() {
-        const centerX = this.cameras.main.centerX;
-        const centerY = this.cameras.main.centerY;
+        const { width, height } = this.cameras.main;
+        const centerX = width / 2;
         
+        // Рассчитываем позиции
+        const headerY = this.layout.headerHeight / 2;
+        const chartY = this.layout.headerHeight + this.layout.chartHeight / 2;
+        const buttonY = this.layout.headerHeight + this.layout.chartHeight + this.layout.buttonHeight / 2;
+
         // Верхняя панель - валюта и баланс
-        this.currencyText = this.add.text(centerX, 20, this.currentCurrency.name, {
+        this.currencyText = this.add.text(centerX, headerY - 30, this.currentCurrency.name, {
             fontSize: '24px',
             fill: '#2c3e50',
             fontFamily: 'Arial',
             fontWeight: 'bold'
         }).setOrigin(0.5);
 
-        this.balanceText = this.add.text(centerX, 50, `Баланс: $${this.balance.toFixed(2)}`, {
+        this.balanceText = this.add.text(centerX, headerY - 5, `Баланс: $${this.balance.toFixed(2)}`, {
             fontSize: '20px',
             fill: '#2c3e50',
             fontFamily: 'Arial'
         }).setOrigin(0.5);
 
         // Кнопки переключения валют
-        this.prevButton = this.add.text(50, 35, '←', {
+        this.prevButton = this.add.text(this.layout.padding + 20, headerY - 15, '←', {
             fontSize: '24px',
             fill: '#3498db',
             fontFamily: 'Arial',
             fontWeight: 'bold'
         }).setInteractive();
 
-        this.nextButton = this.add.text(350, 35, '→', {
+        this.nextButton = this.add.text(width - this.layout.padding - 20, headerY - 15, '→', {
             fontSize: '24px',
             fill: '#3498db',
             fontFamily: 'Arial',
@@ -324,33 +361,33 @@ class GameScene extends Phaser.Scene {
         }).setInteractive();
 
         // Статистика
-        this.statsText = this.add.text(centerX, 80, this.getStatsString(), {
+        this.statsText = this.add.text(centerX, headerY + 20, this.getStatsString(), {
             fontSize: '14px',
             fill: '#666',
             fontFamily: 'Arial'
         }).setOrigin(0.5);
 
         // Прибыль/убыток
-        this.profitText = this.add.text(centerX, 105, '', {
+        this.profitText = this.add.text(centerX, headerY + 40, '', {
             fontSize: '16px',
             fill: '#27ae60',
             fontFamily: 'Arial'
         }).setOrigin(0.5);
 
-        // Панель события (изначально скрыта)
-        this.eventPanel = this.add.rectangle(centerX, 135, 380, 35, 0x2c3e50, 0)
+        // Панель события
+        this.eventPanel = this.add.rectangle(centerX, headerY + 65, width - this.layout.padding * 2, 30, 0x2c3e50, 0)
             .setVisible(false);
-        this.eventText = this.add.text(centerX, 135, '', {
-            fontSize: '14px',
+        this.eventText = this.add.text(centerX, headerY + 65, '', {
+            fontSize: '13px',
             fill: '#ffffff',
             fontFamily: 'Arial',
             fontWeight: 'bold'
         }).setOrigin(0.5).setVisible(false);
 
         // Кнопка покупки
-        this.buyButton = this.add.rectangle(centerX - 80, 500, 140, 50, 0x27ae60)
+        this.buyButton = this.add.rectangle(centerX - 80, buttonY - 40, 140, 50, 0x27ae60)
             .setInteractive();
-        this.add.text(centerX - 80, 500, 'КУПИТЬ', {
+        this.add.text(centerX - 80, buttonY - 40, 'КУПИТЬ', {
             fontSize: '18px',
             fill: '#FFFFFF',
             fontFamily: 'Arial',
@@ -358,9 +395,9 @@ class GameScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         // Кнопка продажи
-        this.sellButton = this.add.rectangle(centerX + 80, 500, 140, 50, 0xe74c3c)
+        this.sellButton = this.add.rectangle(centerX + 80, buttonY - 40, 140, 50, 0xe74c3c)
             .setInteractive();
-        this.add.text(centerX + 80, 500, 'ПРОДАТЬ', {
+        this.add.text(centerX + 80, buttonY - 40, 'ПРОДАТЬ', {
             fontSize: '18px',
             fill: '#FFFFFF',
             fontFamily: 'Arial',
@@ -368,19 +405,21 @@ class GameScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         // Кнопка стоп-ордеров
-        this.stopButton = this.add.rectangle(centerX, 560, 200, 40, 0xf39c12)
+        this.stopButton = this.add.rectangle(centerX, buttonY + 10, 200, 40, 0xf39c12)
             .setInteractive();
-        this.add.text(centerX, 560, 'СТОП-ОРДЕР', {
+        this.add.text(centerX, buttonY + 10, 'СТОП-ОРДЕР', {
             fontSize: '16px',
             fill: '#FFFFFF',
             fontFamily: 'Arial'
         }).setOrigin(0.5);
 
         // Информация о стоп-ордерах
-        this.stopInfo = this.add.text(centerX, 530, '', {
+        this.stopInfo = this.add.text(centerX, buttonY - 10, '', {
             fontSize: '12px',
             fill: '#e67e22',
-            fontFamily: 'Arial'
+            fontFamily: 'Arial',
+            backgroundColor: '#fef9e7',
+            padding: { left: 10, right: 10, top: 5, bottom: 5 }
         }).setOrigin(0.5);
 
         this.updateButtonStates();
@@ -500,11 +539,12 @@ class GameScene extends Phaser.Scene {
         this.chart.clear();
         this.ordersGraphics.clear();
         
-        const history = this.currentCurrency.history;
-        const width = 380;
-        const height = 250;
-        const startY = this.activeEvent ? 170 : 150;
+        const { width, height } = this.cameras.main;
+        const chartWidth = width - this.layout.padding * 2;
+        const chartHeight = this.layout.chartHeight - 40;
+        const startY = this.layout.headerHeight + 20;
         
+        const history = this.currentCurrency.history;
         const minPrice = Math.min(...history);
         const maxPrice = Math.max(...history);
         const range = maxPrice - minPrice || 1;
@@ -513,8 +553,8 @@ class GameScene extends Phaser.Scene {
         this.chart.lineStyle(3, this.currentCurrency.color, 1);
         
         history.forEach((price, index) => {
-            const x = 10 + (index / (history.length - 1)) * width;
-            const y = startY + height - ((price - minPrice) / range) * height;
+            const x = this.layout.padding + (index / (history.length - 1)) * chartWidth;
+            const y = startY + chartHeight - ((price - minPrice) / range) * chartHeight;
             
             if (index === 0) {
                 this.chart.moveTo(x, y);
@@ -527,8 +567,8 @@ class GameScene extends Phaser.Scene {
         
         // УЛУЧШЕННАЯ ВИЗУАЛИЗАЦИЯ ОРДЕРОВ
         if (this.isHolding) {
-            this.drawOrderLines(minPrice, maxPrice, startY, height, range, width);
-            this.drawBuyMarker(startY, height, range, width);
+            this.drawOrderLines(minPrice, maxPrice, startY, chartHeight, range, chartWidth);
+            this.drawBuyMarker(startY, chartHeight, range, chartWidth);
         }
     }
 
@@ -540,14 +580,14 @@ class GameScene extends Phaser.Scene {
             
             // Основная линия
             this.ordersGraphics.lineStyle(3, 0xe74c3c, 0.9);
-            this.ordersGraphics.lineBetween(10, stopY, width + 10, stopY);
+            this.ordersGraphics.lineBetween(this.layout.padding, stopY, this.layout.padding + width, stopY);
             
             // Фон для подписи
             this.ordersGraphics.fillStyle(0xe74c3c, 0.9);
-            this.ordersGraphics.fillRect(10, stopY - 12, 60, 16);
+            this.ordersGraphics.fillRect(this.layout.padding + 5, stopY - 12, 60, 16);
             
             // Подпись стоп-лосса
-            this.add.text(15, stopY - 10, `SL: $${this.stopLoss.toFixed(2)}`, { 
+            this.add.text(this.layout.padding + 10, stopY - 10, `SL: $${this.stopLoss.toFixed(2)}`, { 
                 fontSize: '10px', 
                 fill: '#ffffff',
                 fontFamily: 'Arial',
@@ -561,14 +601,14 @@ class GameScene extends Phaser.Scene {
             
             // Основная линия
             this.ordersGraphics.lineStyle(3, 0x27ae60, 0.9);
-            this.ordersGraphics.lineBetween(10, profitY, width + 10, profitY);
+            this.ordersGraphics.lineBetween(this.layout.padding, profitY, this.layout.padding + width, profitY);
             
             // Фон для подписи
             this.ordersGraphics.fillStyle(0x27ae60, 0.9);
-            this.ordersGraphics.fillRect(10, profitY - 12, 65, 16);
+            this.ordersGraphics.fillRect(this.layout.padding + 5, profitY - 12, 65, 16);
             
             // Подпись тейк-профита
-            this.add.text(15, profitY - 10, `TP: $${this.takeProfit.toFixed(2)}`, { 
+            this.add.text(this.layout.padding + 10, profitY - 10, `TP: $${this.takeProfit.toFixed(2)}`, { 
                 fontSize: '10px', 
                 fill: '#ffffff',
                 fontFamily: 'Arial',
@@ -585,21 +625,23 @@ class GameScene extends Phaser.Scene {
             
             // Вертикальная пунктирная линия через весь график
             this.ordersGraphics.lineStyle(2, 0x3498db, 0.6);
-            this.drawDashedLine(this.ordersGraphics, 10, buyY, width + 10, buyY, 8, 4);
+            this.drawDashedLine(this.ordersGraphics, 
+                this.layout.padding, buyY, 
+                this.layout.padding + width, buyY, 8, 4);
             
             // Большой маркер цены покупки
             this.ordersGraphics.fillStyle(0x3498db, 1);
-            this.ordersGraphics.fillCircle(width + 8, buyY, 6);
+            this.ordersGraphics.fillCircle(this.layout.padding + width + 3, buyY, 6);
             
             // Обводка маркера
             this.ordersGraphics.lineStyle(2, 0xffffff, 1);
-            this.ordersGraphics.strokeCircle(width + 8, buyY, 6);
+            this.ordersGraphics.strokeCircle(this.layout.padding + width + 3, buyY, 6);
             
             // Красивая подпись с фоном
             this.ordersGraphics.fillStyle(0x3498db, 0.9);
-            this.ordersGraphics.fillRect(width + 15, buyY - 10, 75, 16);
+            this.ordersGraphics.fillRect(this.layout.padding + width + 10, buyY - 10, 75, 16);
             
-            this.add.text(width + 18, buyY - 8, `BUY: $${this.buyPrice.toFixed(2)}`, { 
+            this.add.text(this.layout.padding + width + 13, buyY - 8, `BUY: $${this.buyPrice.toFixed(2)}`, { 
                 fontSize: '9px', 
                 fill: '#ffffff',
                 fontFamily: 'Arial',
@@ -724,10 +766,15 @@ class GameScene extends Phaser.Scene {
     }
 
     showMessage(text) {
-        const message = this.add.text(this.cameras.main.centerX, 400, text, {
+        const centerX = this.cameras.main.width / 2;
+        const messageY = this.layout.headerHeight + this.layout.chartHeight / 2;
+        
+        const message = this.add.text(centerX, messageY, text, {
             fontSize: '16px',
             fill: '#f39c12',
-            fontFamily: 'Arial'
+            fontFamily: 'Arial',
+            backgroundColor: '#ffffff',
+            padding: { left: 15, right: 15, top: 8, bottom: 8 }
         }).setOrigin(0.5);
         
         this.time.delayedCall(2000, () => {
@@ -770,16 +817,16 @@ class GameScene extends Phaser.Scene {
     }
 }
 
-// Конфигурация Phaser
+// Конфигурация Phaser с адаптивными размерами
 const config = {
     type: Phaser.AUTO,
-    width: 400,
-    height: 600,
+    width: window.innerWidth,
+    height: window.innerHeight,
     parent: 'game-container',
     backgroundColor: '#f8f9fa',
     scene: GameScene,
     scale: {
-        mode: Phaser.Scale.FIT,
+        mode: Phaser.Scale.RESIZE,
         autoCenter: Phaser.Scale.CENTER_BOTH
     }
 };
