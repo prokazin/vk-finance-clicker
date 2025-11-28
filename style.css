@@ -11,6 +11,11 @@ body {
     height: 100vh;
     overflow: hidden;
     position: fixed;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 #game-container {
@@ -23,11 +28,21 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
-/* Отключение выделения текста на мобильных */
+/* Предотвращение масштабирования на iOS */
 * {
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: none;
+    text-size-adjust: none;
+}
+
+/* Оптимизация для всех устройств */
+@media (max-width: 360px) {
+    #game-container {
+        font-size: 14px;
+    }
+}
+
+@media (max-height: 640px) {
+    #game-container {
+        font-size: 13px;
+    }
 }
