@@ -23,10 +23,7 @@ class GameScene extends Phaser.Scene {
             teal: 0x64D2FF,
             gray1: 0x8E8E93,
             gray2: 0x636366,
-            gray3: 0x48484A,
-            gray4: 0x3A3A3C,
-            gray5: 0x2C2C2E,
-            gray6: 0x1C1C1E
+            gray3: 0x48484A
         };
 
         this.currencies = [
@@ -64,7 +61,7 @@ class GameScene extends Phaser.Scene {
         };
 
         this.layout = {
-            padding: 28,
+            padding: 20,
             headerHeight: 0,
             chartHeight: 0,
             buttonHeight: 0
@@ -109,10 +106,10 @@ class GameScene extends Phaser.Scene {
 
     calculateLayout() {
         const { width, height } = this.cameras.main;
-        this.layout.padding = 28;
-        this.layout.headerHeight = height * 0.24;
-        this.layout.chartHeight = height * 0.45;
-        this.layout.buttonHeight = height * 0.31;
+        this.layout.padding = 20;
+        this.layout.headerHeight = height * 0.22;
+        this.layout.chartHeight = height * 0.48;
+        this.layout.buttonHeight = height * 0.30;
     }
 
     createChart() {
@@ -129,79 +126,76 @@ class GameScene extends Phaser.Scene {
         const chartY = this.layout.headerHeight + this.layout.chartHeight / 2;
         const buttonY = this.layout.headerHeight + this.layout.chartHeight + this.layout.buttonHeight / 2;
 
-        // Modern Header with gradient effect
-        this.headerCard = this.add.rectangle(centerX, headerY, width - this.layout.padding * 2, this.layout.headerHeight - 24, this.colors.card)
-            .setStrokeStyle(0.5, this.colors.gray1)
-            .setDepth(1);
+        // Modern Header
+        this.headerCard = this.add.rectangle(centerX, headerY, width - this.layout.padding * 2, this.layout.headerHeight - 20, this.colors.card)
+            .setStrokeStyle(1, this.colors.gray1);
 
         // Currency icon and name
-        this.currencyIcon = this.add.text(centerX, headerY - 45, this.currentCurrency.icon, {
+        this.currencyIcon = this.add.text(centerX, headerY - 40, this.currentCurrency.icon, {
             fontSize: '32px',
             fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont'
-        }).setOrigin(0.5).setDepth(2);
+        }).setOrigin(0.5);
 
-        this.currencyText = this.add.text(centerX, headerY - 15, this.currentCurrency.name, {
-            fontSize: '22px',
+        this.currencyText = this.add.text(centerX, headerY - 10, this.currentCurrency.name, {
+            fontSize: '20px',
             fill: this.hexToColor(this.colors.textSecondary),
             fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont',
             fontWeight: '600'
-        }).setOrigin(0.5).setDepth(2);
+        }).setOrigin(0.5);
 
-        // Current price - Large dynamic display
+        // Current price
         this.priceText = this.add.text(centerX, headerY + 15, `$${this.currentCurrency.price.toFixed(2)}`, {
-            fontSize: '42px',
+            fontSize: '36px',
             fill: this.hexToColor(this.colors.textPrimary),
             fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont',
             fontWeight: '800'
-        }).setOrigin(0.5).setDepth(2);
+        }).setOrigin(0.5);
 
         // Balance display
-        this.balanceText = this.add.text(centerX, headerY + 55, `Balance: $${this.balance.toFixed(2)}`, {
+        this.balanceText = this.add.text(centerX, headerY + 45, `Balance: $${this.balance.toFixed(2)}`, {
             fontSize: '16px',
             fill: this.hexToColor(this.colors.textSecondary),
             fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
             fontWeight: '400'
-        }).setOrigin(0.5).setDepth(2);
+        }).setOrigin(0.5);
 
-        // Modern currency switcher
-        const switchSize = 44;
-        this.prevButton = this.createModernButton(this.layout.padding + 50, headerY + 10, switchSize, switchSize, '←', this.colors.blue);
-        this.nextButton = this.createModernButton(width - this.layout.padding - 50, headerY + 10, switchSize, switchSize, '→', this.colors.blue);
+        // Currency switcher - адаптивные кнопки
+        const switchSize = 40;
+        this.prevButton = this.createModernButton(this.layout.padding + 35, headerY + 10, switchSize, switchSize, '←', this.colors.blue);
+        this.nextButton = this.createModernButton(width - this.layout.padding - 35, headerY + 10, switchSize, switchSize, '→', this.colors.blue);
 
         // Stats display
-        this.statsText = this.add.text(centerX, headerY + 80, this.getStatsString(), {
+        this.statsText = this.add.text(centerX, headerY + 70, this.getStatsString(), {
             fontSize: '14px',
             fill: this.hexToColor(this.colors.textSecondary),
             fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
             fontWeight: '400'
-        }).setOrigin(0.5).setDepth(2);
+        }).setOrigin(0.5);
 
         // Profit/Loss display
-        this.profitText = this.add.text(centerX, headerY + 100, '', {
+        this.profitText = this.add.text(centerX, headerY + 90, '', {
             fontSize: '18px',
             fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont',
             fontWeight: '700'
-        }).setOrigin(0.5).setDepth(2);
+        }).setOrigin(0.5);
 
         // Modern Chart Card
-        this.chartCard = this.add.rectangle(centerX, chartY, width - this.layout.padding * 2, this.layout.chartHeight - 24, this.colors.card)
-            .setStrokeStyle(0.5, this.colors.gray1)
-            .setDepth(1);
+        this.chartCard = this.add.rectangle(centerX, chartY, width - this.layout.padding * 2, this.layout.chartHeight - 20, this.colors.card)
+            .setStrokeStyle(1, this.colors.gray1);
 
-        // Action Buttons Section
+        // Action Buttons Section - АДАПТИВНЫЕ КНОПКИ
         this.createActionButtons(centerX, buttonY, width);
 
         // Position Info Card
-        this.positionCard = this.add.rectangle(centerX, buttonY - 85, width - this.layout.padding * 2, 52, this.colors.card)
-            .setStrokeStyle(0.5, this.colors.gray1)
-            .setDepth(1);
+        this.positionCard = this.add.rectangle(centerX, buttonY - 70, width - this.layout.padding * 2, 45, this.colors.card)
+            .setStrokeStyle(1, this.colors.gray1);
         
-        this.positionInfo = this.add.text(centerX, buttonY - 85, 'No active position', {
-            fontSize: '16px',
+        this.positionInfo = this.add.text(centerX, buttonY - 70, 'No active position', {
+            fontSize: '15px',
             fill: this.hexToColor(this.colors.textSecondary),
             fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
             fontWeight: '400'
-        }).setOrigin(0.5).setDepth(2);
+        }).setOrigin(0.5);
 
         this.updateButtonStates();
         this.updatePositionInfo();
@@ -209,73 +203,71 @@ class GameScene extends Phaser.Scene {
 
     createModernButton(x, y, width, height, text, color) {
         const button = this.add.rectangle(x, y, width, height, color)
-            .setInteractive()
-            .setDepth(2);
+            .setInteractive();
         
         this.add.text(x, y, text, {
-            fontSize: '20px',
+            fontSize: '18px',
             fill: '#FFFFFF',
             fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont',
             fontWeight: '600'
-        }).setOrigin(0.5).setDepth(3);
+        }).setOrigin(0.5);
         
         return button;
     }
 
     createActionButtons(centerX, buttonY, width) {
-        const buttonWidth = 170;
-        const buttonHeight = 58;
-        const buttonSpacing = 18;
+        // Адаптивные размеры кнопок в зависимости от ширины экрана
+        const isMobile = width < 400;
+        const buttonWidth = isMobile ? 130 : 150;
+        const buttonHeight = 52;
+        const buttonSpacing = isMobile ? 10 : 15;
         
-        // LONG Button - Modern green
-        this.longButton = this.add.rectangle(centerX - buttonWidth - buttonSpacing/2, buttonY - 35, buttonWidth, buttonHeight, this.colors.green)
-            .setInteractive()
-            .setDepth(2);
+        // LONG Button
+        this.longButton = this.add.rectangle(centerX - buttonWidth - buttonSpacing, buttonY - 30, buttonWidth, buttonHeight, this.colors.green)
+            .setInteractive();
         
-        this.add.text(centerX - buttonWidth - buttonSpacing/2, buttonY - 35, 'LONG', {
-            fontSize: '20px',
+        this.add.text(centerX - buttonWidth - buttonSpacing, buttonY - 30, 'LONG', {
+            fontSize: isMobile ? '16px' : '18px',
             fill: '#FFFFFF',
             fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont',
             fontWeight: '700'
-        }).setOrigin(0.5).setDepth(3);
+        }).setOrigin(0.5);
 
-        // SHORT Button - Modern red
-        this.shortButton = this.add.rectangle(centerX + buttonWidth + buttonSpacing/2, buttonY - 35, buttonWidth, buttonHeight, this.colors.red)
-            .setInteractive()
-            .setDepth(2);
+        // SHORT Button
+        this.shortButton = this.add.rectangle(centerX + buttonWidth + buttonSpacing, buttonY - 30, buttonWidth, buttonHeight, this.colors.red)
+            .setInteractive();
         
-        this.add.text(centerX + buttonWidth + buttonSpacing/2, buttonY - 35, 'SHORT', {
-            fontSize: '20px',
+        this.add.text(centerX + buttonWidth + buttonSpacing, buttonY - 30, 'SHORT', {
+            fontSize: isMobile ? '16px' : '18px',
             fill: '#FFFFFF',
             fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont',
             fontWeight: '700'
-        }).setOrigin(0.5).setDepth(3);
+        }).setOrigin(0.5);
 
-        // CLOSE Button - Modern gray
-        this.closeButton = this.add.rectangle(centerX, buttonY - 35, buttonWidth * 1.5, buttonHeight, this.colors.gray3)
-            .setInteractive()
-            .setDepth(2);
+        // CLOSE Button - меньшая ширина для мобильных
+        const closeButtonWidth = isMobile ? buttonWidth * 1.2 : buttonWidth * 1.4;
+        this.closeButton = this.add.rectangle(centerX, buttonY - 30, closeButtonWidth, buttonHeight, this.colors.gray3)
+            .setInteractive();
         
-        this.add.text(centerX, buttonY - 35, 'CLOSE', {
-            fontSize: '19px',
+        this.add.text(centerX, buttonY - 30, isMobile ? 'CLOSE' : 'CLOSE', {
+            fontSize: isMobile ? '16px' : '17px',
             fill: '#FFFFFF',
             fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont',
             fontWeight: '700'
-        }).setOrigin(0.5).setDepth(3);
+        }).setOrigin(0.5);
 
-        // STOP ORDER Button - Modern indigo
-        const stopButtonWidth = 210;
-        const stopButtonHeight = 50;
-        this.stopButton = this.add.rectangle(centerX, buttonY + 25, stopButtonWidth, stopButtonHeight, this.colors.indigo)
-            .setInteractive()
-            .setDepth(2);
+        // STOP ORDER Button
+        const stopButtonWidth = isMobile ? 180 : 200;
+        const stopButtonHeight = 46;
+        this.stopButton = this.add.rectangle(centerX, buttonY + 20, stopButtonWidth, stopButtonHeight, this.colors.indigo)
+            .setInteractive();
         
-        this.add.text(centerX, buttonY + 25, 'STOP ORDER', {
-            fontSize: '17px',
+        this.add.text(centerX, buttonY + 20, 'STOP ORDER', {
+            fontSize: isMobile ? '15px' : '16px',
             fill: '#FFFFFF',
             fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont',
             fontWeight: '700'
-        }).setOrigin(0.5).setDepth(3);
+        }).setOrigin(0.5);
     }
 
     hexToColor(hex) {
@@ -443,9 +435,9 @@ class GameScene extends Phaser.Scene {
         
         const { width, height } = this.cameras.main;
         const chartWidth = width - this.layout.padding * 2 - 40;
-        const chartHeight = this.layout.chartHeight - 60;
+        const chartHeight = this.layout.chartHeight - 80; // Увеличил высоту графика
         const startX = this.layout.padding + 20;
-        const startY = this.layout.headerHeight + 30;
+        const startY = this.layout.headerHeight + 40;
         
         const history = this.currentCurrency.history;
         if (history.length < 2) return;
@@ -454,17 +446,21 @@ class GameScene extends Phaser.Scene {
         const maxPrice = Math.max(...history);
         const range = maxPrice - minPrice || 1;
         
-        // Modern chart line
-        this.chart.lineStyle(4, this.currentCurrency.color, 1);
+        // Рисуем график - ИСПРАВЛЕНО!
+        this.chart.lineStyle(3, this.currentCurrency.color, 1);
         
+        // Правильное рисование линии графика
         for (let i = 0; i < history.length - 1; i++) {
             const x1 = startX + (i / (history.length - 1)) * chartWidth;
             const y1 = startY + chartHeight - ((history[i] - minPrice) / range) * chartHeight;
             const x2 = startX + ((i + 1) / (history.length - 1)) * chartWidth;
             const y2 = startY + chartHeight - ((history[i + 1] - minPrice) / range) * chartHeight;
             
-            this.chart.lineBetween(x1, y1, x2, y2);
+            this.chart.moveTo(x1, y1);
+            this.chart.lineTo(x2, y2);
         }
+        
+        this.chart.strokePath();
         
         // Draw markers if position exists
         if (this.hasPosition) {
@@ -477,20 +473,20 @@ class GameScene extends Phaser.Scene {
         const positionColor = this.position.type === 'long' ? this.colors.green : this.colors.red;
         
         // Entry line
-        this.ordersGraphics.lineStyle(2, positionColor, 0.2);
-        this.drawDashedLine(this.ordersGraphics, startX, entryY, startX + width, entryY, 8, 6);
+        this.ordersGraphics.lineStyle(2, positionColor, 0.3);
+        this.drawDashedLine(this.ordersGraphics, startX, entryY, startX + width, entryY, 6, 4);
         
         // Entry marker
         this.ordersGraphics.fillStyle(positionColor, 1);
-        this.ordersGraphics.fillCircle(startX + width + 6, entryY, 8);
+        this.ordersGraphics.fillCircle(startX + width + 5, entryY, 7);
         
         // Entry label
-        this.ordersGraphics.fillStyle(positionColor, 0.95);
-        this.ordersGraphics.fillRoundedRect(startX + width + 18, entryY - 14, 92, 28, 14);
+        this.ordersGraphics.fillStyle(positionColor, 0.9);
+        this.ordersGraphics.fillRoundedRect(startX + width + 15, entryY - 12, 85, 24, 6);
         
         const positionText = this.position.type === 'long' ? 'LONG' : 'SHORT';
-        this.add.text(startX + width + 23, entryY - 12, `${positionText} $${this.position.entryPrice.toFixed(2)}`, { 
-            fontSize: '11px',
+        this.add.text(startX + width + 20, entryY - 10, `${positionText} $${this.position.entryPrice.toFixed(2)}`, { 
+            fontSize: '10px',
             fill: '#FFFFFF',
             fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
             fontWeight: '600'
@@ -500,14 +496,14 @@ class GameScene extends Phaser.Scene {
         if (this.stopLoss > 0) {
             const stopY = startY + height - ((this.stopLoss - minPrice) / range) * height;
             
-            this.ordersGraphics.lineStyle(3, this.colors.red, 0.8);
+            this.ordersGraphics.lineStyle(2, this.colors.red, 0.8);
             this.ordersGraphics.lineBetween(startX, stopY, startX + width, stopY);
             
-            this.ordersGraphics.fillStyle(this.colors.red, 0.95);
-            this.ordersGraphics.fillRoundedRect(startX + 8, stopY - 15, 70, 30, 15);
+            this.ordersGraphics.fillStyle(this.colors.red, 0.9);
+            this.ordersGraphics.fillRoundedRect(startX + 5, stopY - 11, 60, 22, 4);
             
-            this.add.text(startX + 13, stopY - 13, `SL $${this.stopLoss.toFixed(2)}`, { 
-                fontSize: '11px',
+            this.add.text(startX + 10, stopY - 9, `SL $${this.stopLoss.toFixed(2)}`, { 
+                fontSize: '9px',
                 fill: '#FFFFFF',
                 fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
                 fontWeight: '600'
@@ -518,14 +514,14 @@ class GameScene extends Phaser.Scene {
         if (this.takeProfit > 0) {
             const profitY = startY + height - ((this.takeProfit - minPrice) / range) * height;
             
-            this.ordersGraphics.lineStyle(3, this.colors.green, 0.8);
+            this.ordersGraphics.lineStyle(2, this.colors.green, 0.8);
             this.ordersGraphics.lineBetween(startX, profitY, startX + width, profitY);
             
-            this.ordersGraphics.fillStyle(this.colors.green, 0.95);
-            this.ordersGraphics.fillRoundedRect(startX + 8, profitY - 15, 75, 30, 15);
+            this.ordersGraphics.fillStyle(this.colors.green, 0.9);
+            this.ordersGraphics.fillRoundedRect(startX + 5, profitY - 11, 65, 22, 4);
             
-            this.add.text(startX + 13, profitY - 13, `TP $${this.takeProfit.toFixed(2)}`, { 
-                fontSize: '11px',
+            this.add.text(startX + 10, profitY - 9, `TP $${this.takeProfit.toFixed(2)}`, { 
+                fontSize: '9px',
                 fill: '#FFFFFF',
                 fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
                 fontWeight: '600'
@@ -605,13 +601,13 @@ class GameScene extends Phaser.Scene {
         const messageY = this.layout.headerHeight + this.layout.chartHeight / 2;
         
         const message = this.add.text(centerX, messageY, text, {
-            fontSize: '17px',
+            fontSize: '16px',
             fill: this.hexToColor(this.colors.textPrimary),
             fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
             fontWeight: '500',
             backgroundColor: this.hexToColor(this.colors.card),
-            padding: { left: 24, right: 24, top: 16, bottom: 16 }
-        }).setOrigin(0.5).setDepth(10);
+            padding: { left: 20, right: 20, top: 12, bottom: 12 }
+        }).setOrigin(0.5);
         
         this.tweens.add({
             targets: message,
