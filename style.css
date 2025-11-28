@@ -6,43 +6,20 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    background: #1a1a1a;
-    width: 100vw;
-    height: 100vh;
-    overflow: hidden;
-    position: fixed;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
 }
 
 #game-container {
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    max-width: 400px;
+    height: 600px;
     background: white;
-    border-radius: 0;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
     overflow: hidden;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
-
-/* Предотвращение масштабирования на iOS */
-* {
-    -webkit-text-size-adjust: none;
-    text-size-adjust: none;
-}
-
-/* Оптимизация для всех устройств */
-@media (max-width: 360px) {
-    #game-container {
-        font-size: 14px;
-    }
-}
-
-@media (max-height: 640px) {
-    #game-container {
-        font-size: 13px;
-    }
 }
