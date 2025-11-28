@@ -34,7 +34,7 @@ class GameScene extends Phaser.Scene {
         this.createOptimizedUI();
         this.setupEventListeners();
         
-        // Очень медленное обновление как на бирже
+        // Медленное обновление как на бирже
         this.time.addEvent({
             delay: 500,
             callback: this.updatePrice,
@@ -57,94 +57,90 @@ class GameScene extends Phaser.Scene {
 
     createOptimizedUI() {
         const centerX = this.cameras.main.centerX;
+        const screenHeight = this.cameras.main.height;
         
         // Компактная верхняя панель
-        this.currencyText = this.add.text(centerX, 15, this.currentCurrency.name, {
-            fontSize: '20px',
-            fill: '#2c3e50',
-            fontFamily: 'Arial, sans-serif',
-            fontWeight: 'bold'
-        }).setOrigin(0.5);
-
-        // Кнопки переключения валют (меньше)
-        this.prevButton = this.add.text(30, 15, '◀', {
-            fontSize: '18px',
-            fill: '#3498db',
-            fontFamily: 'Arial, sans-serif',
-            backgroundColor: '#ecf0f1',
-            padding: { left: 8, right: 8, top: 4, bottom: 4 }
-        }).setInteractive();
-
-        this.nextButton = this.add.text(370, 15, '▶', {
-            fontSize: '18px',
-            fill: '#3498db',
-            fontFamily: 'Arial, sans-serif',
-            backgroundColor: '#ecf0f1',
-            padding: { left: 8, right: 8, top: 4, bottom: 4 }
-        }).setInteractive();
-
-        // Баланс и статистика компактно
-        this.balanceText = this.add.text(centerX, 45, `$${this.balance.toFixed(0)}`, {
+        this.currencyText = this.add.text(centerX, 20, this.currentCurrency.name, {
             fontSize: '22px',
             fill: '#2c3e50',
             fontFamily: 'Arial, sans-serif',
             fontWeight: 'bold'
         }).setOrigin(0.5);
 
-        this.statsText = this.add.text(centerX, 70, this.getCompactStats(), {
-            fontSize: '12px',
+        // Кнопки переключения валют
+        this.prevButton = this.createTextButton(40, 20, '◀', 0x3498db, 35, 35);
+        this.nextButton = this.createTextButton(360, 20, '▶', 0x3498db, 35, 35);
+
+        // Баланс и статистика
+        this.balanceText = this.add.text(centerX, 50, `$${this.balance.toFixed(0)}`, {
+            fontSize: '24px',
+            fill: '#2c3e50',
+            fontFamily: 'Arial, sans-serif',
+            fontWeight: 'bold'
+        }).setOrigin(0.5);
+
+        this.statsText = this.add.text(centerX, 75, this.getCompactStats(), {
+            fontSize: '13px',
             fill: '#666',
             fontFamily: 'Arial, sans-serif'
         }).setOrigin(0.5);
 
         // Прибыль/убыток
-        this.profitText = this.add.text(centerX, 90, '', {
-            fontSize: '14px',
+        this.profitText = this.add.text(centerX, 95, '', {
+            fontSize: '16px',
             fill: '#27ae60',
             fontFamily: 'Arial, sans-serif',
             fontWeight: 'bold'
         }).setOrigin(0.5);
 
-        // Кнопки управления (компактнее)
-        this.buyButton = this.add.rectangle(centerX - 75, 520, 130, 45, 0x27ae60)
-            .setInteractive();
-        this.add.text(centerX - 75, 520, 'КУПИТЬ', {
-            fontSize: '16px',
-            fill: '#FFFFFF',
-            fontFamily: 'Arial, sans-serif',
-            fontWeight: 'bold'
-        }).setOrigin(0.5);
-
-        this.sellButton = this.add.rectangle(centerX + 75, 520, 130, 45, 0xe74c3c)
-            .setInteractive();
-        this.add.text(centerX + 75, 520, 'ПРОДАТЬ', {
-            fontSize: '16px',
-            fill: '#FFFFFF',
-            fontFamily: 'Arial, sans-serif',
-            fontWeight: 'bold'
-        }).setOrigin(0.5);
-
+        // Основные кнопки управления
+        this.buyButton = this.createRoundedButton(centerX - 80, screenHeight - 80, 140, 50, 0x27ae60, 'КУПИТЬ');
+        this.sellButton = this.createRoundedButton(centerX + 80, screenHeight - 80, 140, 50, 0xe74c3c, 'ПРОДАТЬ');
+        
         // Кнопка установки тейков
-        this.stopButton = this.add.rectangle(centerX, 470, 150, 35, 0xf39c12)
-            .setInteractive();
-        this.add.text(centerX, 470, 'УСТАНОВИТЬ ТЕЙКИ', {
-            fontSize: '13px',
-            fill: '#FFFFFF',
-            fontFamily: 'Arial, sans-serif',
-            fontWeight: 'bold'
-        }).setOrigin(0.5);
+        this.stopButton = this.createRoundedButton(centerX, screenHeight - 140, 160, 40, 0xf39c12, 'УСТАНОВИТЬ ТЕЙКИ');
 
         // Информация о тейках
-        this.stopInfo = this.add.text(centerX, 440, '', {
-            fontSize: '11px',
+        this.stopInfo = this.add.text(centerX, screenHeight - 170, '', {
+            fontSize: '12px',
             fill: '#e67e22',
             fontFamily: 'Arial, sans-serif',
             backgroundColor: '#fef9e7',
-            padding: { left: 8, right: 8, top: 3, bottom: 3 }
+            padding: { left: 10, right: 10, top: 5, bottom: 5 }
         }).setOrigin(0.5);
 
         this.updateButtonStates();
         this.updateStopInfo();
+    }
+
+    createTextButton(x, y, text, color, width, height) {
+        const button = this.add.rectangle(x, y, width, height, color)
+            .setInteractive()
+            .setStrokeStyle(2, 0xffffff);
+        
+        this.add.text(x, y, text, {
+            fontSize: '16px',
+            fill: '#ffffff',
+            fontFamily: 'Arial, sans-serif',
+            fontWeight: 'bold'
+        }).setOrigin(0.5);
+        
+        return button;
+    }
+
+    createRoundedButton(x, y, width, height, color, text) {
+        const button = this.add.rectangle(x, y, width, height, color)
+            .setInteractive()
+            .setStrokeStyle(2, 0xffffff);
+        
+        this.add.text(x, y, text, {
+            fontSize: height > 45 ? '18px' : '14px',
+            fill: '#ffffff',
+            fontFamily: 'Arial, sans-serif',
+            fontWeight: 'bold'
+        }).setOrigin(0.5);
+        
+        return button;
     }
 
     setupEventListeners() {
@@ -152,7 +148,18 @@ class GameScene extends Phaser.Scene {
         this.nextButton.on('pointerdown', () => this.switchCurrency(1));
         this.buyButton.on('pointerdown', () => this.buyCoin());
         this.sellButton.on('pointerdown', () => this.sellCoin());
-        this.stopButton.on('pointerdown', () => this.showStopMenu = true ? this.createStopMenu() : this.destroyStopMenu());
+        this.stopButton.on('pointerdown', () => this.toggleStopMenu());
+    }
+
+    toggleStopMenu() {
+        if (!this.isHolding) return;
+        
+        if (this.showStopMenu) {
+            this.hideStopMenu();
+        } else {
+            this.showStopMenu = true;
+            this.createStopMenu();
+        }
     }
 
     createStopMenu() {
@@ -160,85 +167,70 @@ class GameScene extends Phaser.Scene {
         const centerY = this.cameras.main.centerY;
         
         // Фон меню
-        this.stopMenuBg = this.add.rectangle(centerX, centerY, 350, 250, 0x2c3e50, 0.95)
-            .setStrokeStyle(2, 0x3498db)
+        this.stopMenuBg = this.add.rectangle(centerX, centerY, 350, 280, 0x2c3e50, 0.98)
+            .setStrokeStyle(3, 0x3498db)
             .setInteractive();
         
         // Заголовок
-        this.add.text(centerX, centerY - 100, 'УСТАНОВКА ТЕЙК-ПРОФИТА', {
-            fontSize: '16px',
+        this.stopMenuTitle = this.add.text(centerX, centerY - 120, 'УСТАНОВКА ТЕЙК-ПРОФИТА', {
+            fontSize: '18px',
             fill: '#ffffff',
             fontFamily: 'Arial, sans-serif',
             fontWeight: 'bold'
         }).setOrigin(0.5);
         
         // Текущая цена
-        this.add.text(centerX, centerY - 70, `Текущая цена: $${this.currentCurrency.price.toFixed(2)}`, {
-            fontSize: '14px',
+        this.stopMenuPrice = this.add.text(centerX, centerY - 90, `Текущая цена: $${this.currentCurrency.price.toFixed(2)}`, {
+            fontSize: '15px',
             fill: '#ecf0f1',
             fontFamily: 'Arial, sans-serif'
         }).setOrigin(0.5);
         
-        // Поле ввода для стоп-лосса
-        this.add.text(centerX - 80, centerY - 40, 'СТОП-ЛОСС:', {
-            fontSize: '14px',
+        // Секция стоп-лосса
+        this.add.text(centerX - 80, centerY - 60, 'СТОП-ЛОСС:', {
+            fontSize: '15px',
             fill: '#ff7675',
-            fontFamily: 'Arial, sans-serif'
+            fontFamily: 'Arial, sans-serif',
+            fontWeight: 'bold'
         }).setOrigin(0.5);
         
-        this.stopLossInput = this.createNumberInput(centerX - 80, centerY - 15, this.stopLoss || this.buyPrice * 0.95);
+        this.stopLossInput = this.createNumberInput(centerX - 80, centerY - 30, this.stopLoss || this.buyPrice * 0.95);
         
-        // Поле ввода для тейк-профита
-        this.add.text(centerX + 80, centerY - 40, 'ТЕЙК-ПРОФИТ:', {
-            fontSize: '14px',
+        // Секция тейк-профита
+        this.add.text(centerX + 80, centerY - 60, 'ТЕЙК-ПРОФИТ:', {
+            fontSize: '15px',
             fill: '#00b894',
-            fontFamily: 'Arial, sans-serif'
+            fontFamily: 'Arial, sans-serif',
+            fontWeight: 'bold'
         }).setOrigin(0.5);
         
-        this.takeProfitInput = this.createNumberInput(centerX + 80, centerY - 15, this.takeProfit || this.buyPrice * 1.05);
+        this.takeProfitInput = this.createNumberInput(centerX + 80, centerY - 30, this.takeProfit || this.buyPrice * 1.05);
         
         // Быстрые кнопки для стоп-лосса
-        this.createQuickButtons(centerX - 80, centerY + 20, 'stopLoss', [
+        this.createQuickButtons(centerX - 80, centerY + 10, 'stopLoss', [
             { label: '-2%', value: this.buyPrice * 0.98 },
             { label: '-5%', value: this.buyPrice * 0.95 },
             { label: '-10%', value: this.buyPrice * 0.90 }
         ]);
         
         // Быстрые кнопки для тейк-профита
-        this.createQuickButtons(centerX + 80, centerY + 20, 'takeProfit', [
+        this.createQuickButtons(centerX + 80, centerY + 10, 'takeProfit', [
             { label: '+2%', value: this.buyPrice * 1.02 },
             { label: '+5%', value: this.buyPrice * 1.05 },
             { label: '+10%', value: this.buyPrice * 1.10 }
         ]);
         
         // Кнопки действия
-        this.applyButton = this.add.rectangle(centerX - 60, centerY + 70, 100, 35, 0x27ae60)
-            .setInteractive();
-        this.add.text(centerX - 60, centerY + 70, 'ПРИМЕНИТЬ', {
-            fontSize: '13px',
-            fill: '#FFFFFF',
-            fontFamily: 'Arial, sans-serif',
-            fontWeight: 'bold'
-        }).setOrigin(0.5);
+        this.stopMenuApply = this.createRoundedButton(centerX - 70, centerY + 80, 120, 40, 0x27ae60, 'ПРИМЕНИТЬ');
+        this.stopMenuCancel = this.createRoundedButton(centerX + 70, centerY + 80, 120, 40, 0xe74c3c, 'ЗАКРЫТЬ');
         
-        this.cancelButton = this.add.rectangle(centerX + 60, centerY + 70, 100, 35, 0xe74c3c)
-            .setInteractive();
-        this.add.text(centerX + 60, centerY + 70, 'ОТМЕНА', {
-            fontSize: '13px',
-            fill: '#FFFFFF',
-            fontFamily: 'Arial, sans-serif',
-            fontWeight: 'bold'
-        }).setOrigin(0.5);
-        
-        this.applyButton.on('pointerdown', () => this.applyStopOrders());
-        this.cancelButton.on('pointerdown', () => this.destroyStopMenu());
-        
-        this.showStopMenu = true;
+        this.stopMenuApply.on('pointerdown', () => this.applyStopOrders());
+        this.stopMenuCancel.on('pointerdown', () => this.hideStopMenu());
     }
 
     createNumberInput(x, y, defaultValue) {
-        const inputBg = this.add.rectangle(x, y, 100, 30, 0x34495e)
-            .setStrokeStyle(1, 0x7f8c8d);
+        const inputBg = this.add.rectangle(x, y, 100, 35, 0x34495e)
+            .setStrokeStyle(2, 0x7f8c8d);
         
         const inputText = this.add.text(x, y, defaultValue.toFixed(2), {
             fontSize: '14px',
@@ -248,63 +240,37 @@ class GameScene extends Phaser.Scene {
         }).setOrigin(0.5);
         
         // Кнопки +/-
-        const minusBtn = this.add.rectangle(x - 25, y, 20, 20, 0xe74c3c)
-            .setInteractive();
-        this.add.text(x - 25, y, '-', {
-            fontSize: '12px',
-            fill: '#ffffff',
-            fontFamily: 'Arial, sans-serif',
-            fontWeight: 'bold'
-        }).setOrigin(0.5);
+        const minusBtn = this.createTextButton(x - 30, y, '-', 0xe74c3c, 25, 25);
+        const plusBtn = this.createTextButton(x + 30, y, '+', 0x27ae60, 25, 25);
         
-        const plusBtn = this.add.rectangle(x + 25, y, 20, 20, 0x27ae60)
-            .setInteractive();
-        this.add.text(x + 25, y, '+', {
-            fontSize: '12px',
-            fill: '#ffffff',
-            fontFamily: 'Arial, sans-serif',
-            fontWeight: 'bold'
-        }).setOrigin(0.5);
+        const inputData = { bg: inputBg, text: inputText, value: defaultValue };
         
-        minusBtn.on('pointerdown', () => this.adjustInputValue(inputText, -1));
-        plusBtn.on('pointerdown', () => this.adjustInputValue(inputText, 1));
+        minusBtn.on('pointerdown', () => this.adjustInputValue(inputData, -0.5));
+        plusBtn.on('pointerdown', () => this.adjustInputValue(inputData, 0.5));
         
-        return { bg: inputBg, text: inputText, value: defaultValue };
+        return inputData;
     }
 
     createQuickButtons(x, y, type, buttons) {
         buttons.forEach((button, index) => {
-            const btn = this.add.rectangle(x, y + (index * 25), 70, 20, 0x3498db)
-                .setInteractive();
-            this.add.text(x, y + (index * 25), button.label, {
-                fontSize: '11px',
-                fill: '#ffffff',
-                fontFamily: 'Arial, sans-serif'
-            }).setOrigin(0.5);
-            
+            const btn = this.createRoundedButton(x, y + (index * 30), 80, 25, 0x3498db, button.label);
             btn.on('pointerdown', () => this.setInputValue(type, button.value));
         });
     }
 
-    adjustInputValue(inputText, direction) {
-        const currentValue = parseFloat(inputText.text);
-        const newValue = currentValue + (direction * (currentValue * 0.01)); // 1% изменение
-        inputText.setText(newValue.toFixed(2));
-        
-        if (inputText === this.stopLossInput.text) {
-            this.stopLossInput.value = newValue;
-        } else {
-            this.takeProfitInput.value = newValue;
-        }
+    adjustInputValue(inputData, change) {
+        inputData.value += change;
+        inputData.value = Math.max(1, inputData.value);
+        inputData.text.setText(inputData.value.toFixed(2));
     }
 
     setInputValue(type, value) {
         if (type === 'stopLoss') {
-            this.stopLossInput.text.setText(value.toFixed(2));
             this.stopLossInput.value = value;
+            this.stopLossInput.text.setText(value.toFixed(2));
         } else {
-            this.takeProfitInput.text.setText(value.toFixed(2));
             this.takeProfitInput.value = value;
+            this.takeProfitInput.text.setText(value.toFixed(2));
         }
     }
 
@@ -320,46 +286,53 @@ class GameScene extends Phaser.Scene {
             this.takeProfit = this.buyPrice * 1.02;
         }
         
-        this.destroyStopMenu();
+        this.hideStopMenu();
         this.updateStopInfo();
         this.saveGameData();
         
-        this.showMessage('Тейки установлены!', 0x27ae60);
+        this.showNotification('Тейк-профиты установлены!', 0x27ae60);
     }
 
-    destroyStopMenu() {
-        if (this.stopMenuBg) this.stopMenuBg.destroy();
-        if (this.stopLossInput) this.stopLossInput.bg.destroy();
-        if (this.stopLossInput) this.stopLossInput.text.destroy();
-        if (this.takeProfitInput) this.takeProfitInput.bg.destroy();
-        if (this.takeProfitInput) this.takeProfitInput.text.destroy();
-        if (this.applyButton) this.applyButton.destroy();
-        if (this.cancelButton) this.cancelButton.destroy();
+    hideStopMenu() {
+        // Удаляем все элементы меню
+        const elements = [
+            this.stopMenuBg, this.stopMenuTitle, this.stopMenuPrice,
+            this.stopLossInput, this.takeProfitInput,
+            this.stopMenuApply, this.stopMenuCancel
+        ];
+        
+        elements.forEach(element => {
+            if (element) {
+                if (element.bg) element.bg.destroy();
+                if (element.text) element.text.destroy();
+                if (element.destroy) element.destroy();
+            }
+        });
         
         // Удаляем кнопки быстрого выбора
-        for (let i = 0; i < 6; i++) {
-            const btn = this.children.getArray().find(child => 
-                child.x === (this.cameras.main.centerX - 80 || this.cameras.main.centerX + 80) && 
-                child.y === (this.cameras.main.centerY + 20 + i * 25) &&
-                child.width === 70
-            );
-            if (btn) btn.destroy();
-        }
+        this.children.getArray().forEach(child => {
+            if (child.x && (
+                (child.x === this.cameras.main.centerX - 80 && child.y >= this.cameras.main.centerY + 10) ||
+                (child.x === this.cameras.main.centerX + 80 && child.y >= this.cameras.main.centerY + 10)
+            ) && child.width === 80) {
+                child.destroy();
+            }
+        });
         
         this.showStopMenu = false;
     }
 
-    showMessage(text, color) {
-        const message = this.add.text(this.cameras.main.centerX, 400, text, {
-            fontSize: '14px',
-            fill: Phaser.Display.Color.IntegerToColor(color).rgba,
+    showNotification(message, color) {
+        const notification = this.add.text(this.cameras.main.centerX, 150, message, {
+            fontSize: '16px',
+            fill: '#ffffff',
             fontFamily: 'Arial, sans-serif',
-            backgroundColor: '#ffffff',
-            padding: { left: 10, right: 10, top: 5, bottom: 5 }
-        }).setOrigin(0.5);
+            backgroundColor: Phaser.Display.Color.IntegerToColor(color).rgba,
+            padding: { left: 15, right: 15, top: 8, bottom: 8 }
+        }).setOrigin(0.5).setDepth(100);
         
         this.time.delayedCall(2000, () => {
-            message.destroy();
+            notification.destroy();
         });
     }
 
@@ -380,7 +353,6 @@ class GameScene extends Phaser.Scene {
 
     updatePrice() {
         const currency = this.currentCurrency;
-        // Очень медленное изменение как на реальной бирже
         const changePercent = (Math.random() - 0.5) * currency.volatility * 0.5;
         currency.price *= (1 + changePercent / 100);
         currency.price = Math.max(currency.price, 1);
@@ -399,14 +371,14 @@ class GameScene extends Phaser.Scene {
         if (this.isHolding && this.stopLoss > 0) {
             if (this.currentCurrency.price <= this.stopLoss) {
                 this.sellCoin();
-                this.showMessage('СТОП-ЛОСС СРАБОТАЛ!', 0xe74c3c);
+                this.showNotification('СТОП-ЛОСС СРАБОТАЛ!', 0xe74c3c);
             }
         }
         
         if (this.isHolding && this.takeProfit > 0) {
             if (this.currentCurrency.price >= this.takeProfit) {
                 this.sellCoin();
-                this.showMessage('ТЕЙК-ПРОФИТ СРАБОТАЛ!', 0x27ae60);
+                this.showNotification('ТЕЙК-ПРОФИТ СРАБОТАЛ!', 0x27ae60);
             }
         }
     }
@@ -415,9 +387,9 @@ class GameScene extends Phaser.Scene {
         this.chart.clear();
         
         const history = this.currentCurrency.history;
-        const width = 380;
+        const width = this.cameras.main.width - 20;
         const height = 280;
-        const startY = 110;
+        const startY = 120;
         
         const minPrice = Math.min(...history);
         const maxPrice = Math.max(...history);
@@ -434,8 +406,8 @@ class GameScene extends Phaser.Scene {
             this.chart.lineBetween(10, y, width + 10, y);
         }
         
-        // Линия графика (более четкая)
-        this.chart.lineStyle(2, this.currentCurrency.color, 1);
+        // Линия графика (четкая)
+        this.chart.lineStyle(3, this.currentCurrency.color, 1);
         
         for (let i = 0; i < history.length - 1; i++) {
             const x1 = 10 + (i / (history.length - 1)) * width;
@@ -446,34 +418,36 @@ class GameScene extends Phaser.Scene {
             this.chart.lineBetween(x1, y1, x2, y2);
         }
         
-        // Линии тейк-профитов (четкие)
+        // Линии тейк-профитов
         if (this.isHolding) {
-            this.drawStopLines(minPrice, maxPrice, startY, height, range);
+            this.drawStopLines(minPrice, maxPrice, startY, height, range, width);
         }
     }
 
-    drawStopLines(minPrice, maxPrice, startY, height, range) {
+    drawStopLines(minPrice, maxPrice, startY, height, range, width) {
         if (this.stopLoss > 0 && this.stopLoss >= minPrice && this.stopLoss <= maxPrice) {
             const stopY = startY + height - ((this.stopLoss - minPrice) / range) * height;
-            this.chart.lineStyle(2, 0xe74c3c, 0.8);
+            this.chart.lineStyle(2, 0xe74c3c, 0.9);
             this.chart.lineBetween(10, stopY, width + 10, stopY);
-            this.add.text(15, stopY - 8, `SL: $${this.stopLoss.toFixed(2)}`, { 
-                fontSize: '10px', 
+            this.add.text(15, stopY - 10, `SL: $${this.stopLoss.toFixed(2)}`, { 
+                fontSize: '11px', 
                 fill: '#e74c3c',
                 fontFamily: 'Arial, sans-serif',
-                backgroundColor: '#ffffff'
+                backgroundColor: '#ffffff',
+                padding: { left: 4, right: 4, top: 2, bottom: 2 }
             });
         }
         
         if (this.takeProfit > 0 && this.takeProfit >= minPrice && this.takeProfit <= maxPrice) {
             const profitY = startY + height - ((this.takeProfit - minPrice) / range) * height;
-            this.chart.lineStyle(2, 0x27ae60, 0.8);
+            this.chart.lineStyle(2, 0x27ae60, 0.9);
             this.chart.lineBetween(10, profitY, width + 10, profitY);
-            this.add.text(15, profitY - 8, `TP: $${this.takeProfit.toFixed(2)}`, { 
-                fontSize: '10px', 
+            this.add.text(15, profitY - 10, `TP: $${this.takeProfit.toFixed(2)}`, { 
+                fontSize: '11px', 
                 fill: '#27ae60',
                 fontFamily: 'Arial, sans-serif',
-                backgroundColor: '#ffffff'
+                backgroundColor: '#ffffff',
+                padding: { left: 4, right: 4, top: 2, bottom: 2 }
             });
         }
     }
@@ -508,8 +482,9 @@ class GameScene extends Phaser.Scene {
             if (this.stopLoss > 0) info += `SL: $${this.stopLoss.toFixed(1)} `;
             if (this.takeProfit > 0) info += `TP: $${this.takeProfit.toFixed(1)}`;
             this.stopInfo.setText(info);
+            this.stopInfo.setVisible(true);
         } else {
-            this.stopInfo.setText('');
+            this.stopInfo.setVisible(false);
         }
     }
 
@@ -592,13 +567,13 @@ class GameScene extends Phaser.Scene {
 
 const config = {
     type: Phaser.AUTO,
-    width: 400,
-    height: 600,
+    width: window.innerWidth,
+    height: window.innerHeight,
     parent: 'game-container',
     backgroundColor: '#f8f9fa',
     scene: GameScene,
     scale: {
-        mode: Phaser.Scale.FIT,
+        mode: Phaser.Scale.RESIZE,
         autoCenter: Phaser.Scale.CENTER_BOTH
     },
     render: {
