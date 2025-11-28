@@ -62,9 +62,7 @@ class GameScene extends Phaser.Scene {
             padding: 24,
             headerHeight: 0,
             chartHeight: 0,
-            buttonHeight: 0,
-            cardRadius: 12,
-            buttonRadius: 8
+            buttonHeight: 0
         };
     }
 
@@ -76,7 +74,7 @@ class GameScene extends Phaser.Scene {
         return this.position !== null;
     }
 
-    create() {
+    async create() {
         this.calculateLayout();
         
         // Clean dark background
@@ -90,6 +88,9 @@ class GameScene extends Phaser.Scene {
             }
         });
 
+        // Загружаем сохраненные данные ПЕРЕД созданием UI
+        await this.loadGameData();
+
         this.createUI();
         this.createChart();
         this.setupEventListeners();
@@ -100,6 +101,8 @@ class GameScene extends Phaser.Scene {
             callbackScope: this,
             loop: true
         });
+
+        console.log('🚀 VK Trading App Started');
     }
 
     calculateLayout() {
@@ -124,13 +127,13 @@ class GameScene extends Phaser.Scene {
         const chartY = this.layout.headerHeight + this.layout.chartHeight / 2;
         const buttonY = this.layout.headerHeight + this.layout.chartHeight + this.layout.buttonHeight / 2;
 
-        // HEADER SECTION - Perfectly aligned
+        // HEADER SECTION
         this.createHeaderSection(centerX, headerY, width);
 
-        // CHART SECTION - Clean and organized
+        // CHART SECTION
         this.createChartSection(centerX, chartY, width);
 
-        // ACTION BUTTONS - Perfectly spaced
+        // ACTION BUTTONS
         this.createActionSection(centerX, buttonY, width);
 
         this.updateButtonStates();
@@ -142,7 +145,7 @@ class GameScene extends Phaser.Scene {
         this.headerCard = this.add.rectangle(centerX, headerY, width - this.layout.padding * 2, this.layout.headerHeight - 16, this.colors.card)
             .setStrokeStyle(1, this.colors.border);
 
-        // Currency icon - perfectly centered
+        // Currency icon
         this.currencyIcon = this.add.text(centerX, headerY - 25, this.currentCurrency.icon, {
             fontSize: '28px',
             fill: this.hexToColor(this.currentCurrency.color),
@@ -158,7 +161,7 @@ class GameScene extends Phaser.Scene {
             fontWeight: '400'
         }).setOrigin(0.5);
 
-        // Current price - large and prominent
+        // Current price
         this.priceText = this.add.text(centerX, headerY + 25, `$${this.currentCurrency.price.toFixed(2)}`, {
             fontSize: '32px',
             fill: this.hexToColor(this.colors.textPrimary),
@@ -174,7 +177,7 @@ class GameScene extends Phaser.Scene {
             fontWeight: '400'
         }).setOrigin(0.5);
 
-        // Currency switcher - perfectly aligned
+        // Currency switcher
         const switchSize = 40;
         this.prevButton = this.createRoundedButton(this.layout.padding + 35, headerY + 15, switchSize, switchSize, '←', this.colors.primary);
         this.nextButton = this.createRoundedButton(width - this.layout.padding - 35, headerY + 15, switchSize, switchSize, '→', this.colors.primary);
@@ -194,7 +197,7 @@ class GameScene extends Phaser.Scene {
             letterSpacing: 1
         });
 
-        // Stats - perfectly aligned to right
+        // Stats
         this.statsText = this.add.text(width - this.layout.padding - 16, chartY - this.layout.chartHeight/2 + 20, this.getStatsString(), {
             fontSize: '12px',
             fill: this.hexToColor(this.colors.textSecondary),
@@ -213,7 +216,7 @@ class GameScene extends Phaser.Scene {
         this.buttonsCard = this.add.rectangle(centerX, buttonY - 10, width - this.layout.padding * 2, 140, this.colors.card)
             .setStrokeStyle(1, this.colors.border);
 
-        // Position info - centered above buttons
+        // Position info
         this.positionCard = this.add.rectangle(centerX, buttonY - 65, Math.min(width - 80, 320), 36, this.colors.card)
             .setStrokeStyle(1, this.colors.border);
         
@@ -231,17 +234,20 @@ class GameScene extends Phaser.Scene {
             fontWeight: '700'
         }).setOrigin(0.5);
 
-        // Action buttons row 1 - perfectly spaced
+        // Action buttons row 1
         this.longButton = this.createRoundedButton(centerX - buttonWidth - buttonSpacing, buttonY - 10, buttonWidth, buttonHeight, 'LONG', this.colors.success);
         this.shortButton = this.createRoundedButton(centerX + buttonWidth + buttonSpacing, buttonY - 10, buttonWidth, buttonHeight, 'SHORT', this.colors.danger);
         
-        // Close button - centered
+        // Close button
         const closeButtonWidth = isMobile ? buttonWidth * 1.2 : buttonWidth * 1.4;
         this.closeButton = this.createRoundedButton(centerX, buttonY - 10, closeButtonWidth, buttonHeight, 'CLOSE', this.colors.primary);
 
-        // Stop order button - centered below
+        // Stop order button
         const stopButtonWidth = isMobile ? 180 : 200;
         this.stopButton = this.createRoundedButton(centerX, buttonY + 35, stopButtonWidth, 46, 'STOP ORDER', this.colors.secondary);
+
+        // Share button for VK
+        this.shareButton = this.createRoundedButton(width - this.layout.padding - 50, buttonY + 35, 90, 36, 'SHARE', this.colors.warning);
     }
 
     createRoundedButton(x, y, width, height, text, color) {
@@ -271,9 +277,10 @@ class GameScene extends Phaser.Scene {
         this.shortButton.on('pointerdown', () => this.openShort());
         this.closeButton.on('pointerdown', () => this.closePosition());
         this.stopButton.on('pointerdown', () => this.setStopOrder());
+        this.shareButton.on('pointerdown', () => this.shareResults());
     }
 
-    openLong() {
+    async openLong() {
         if (this.hasPosition) return;
         
         const coinsToBuy = Math.floor(this.balance / this.currentCurrency.price);
@@ -287,11 +294,12 @@ class GameScene extends Phaser.Scene {
             
             this.updateUI();
             this.updateChart();
+            await this.saveGameData();
             this.showMessage(`LONG opened at $${this.position.entryPrice.toFixed(2)}`, this.colors.success);
         }
     }
 
-    openShort() {
+    async openShort() {
         if (this.hasPosition) return;
         
         const coinsToSell = Math.floor(this.balance / this.currentCurrency.price);
@@ -305,11 +313,12 @@ class GameScene extends Phaser.Scene {
             
             this.updateUI();
             this.updateChart();
+            await this.saveGameData();
             this.showMessage(`SHORT opened at $${this.position.entryPrice.toFixed(2)}`, this.colors.danger);
         }
     }
 
-    closePosition() {
+    async closePosition() {
         if (!this.hasPosition) return;
         
         let profit = 0;
@@ -334,6 +343,7 @@ class GameScene extends Phaser.Scene {
         
         this.updateUI();
         this.updateChart();
+        await this.saveGameData();
         
         const color = profit >= 0 ? this.colors.success : this.colors.danger;
         this.showMessage(`Position closed! P&L: $${profit.toFixed(2)}`, color);
@@ -359,7 +369,7 @@ class GameScene extends Phaser.Scene {
         }
     }
 
-    setStopOrder() {
+    async setStopOrder() {
         if (!this.hasPosition) return;
         
         if (this.position.type === 'long') {
@@ -372,6 +382,7 @@ class GameScene extends Phaser.Scene {
         
         this.updateUI();
         this.updateChart();
+        await this.saveGameData();
         this.showMessage('Stop orders set', this.colors.secondary);
     }
 
@@ -625,8 +636,86 @@ class GameScene extends Phaser.Scene {
         this.updateChart();
         this.updateUI();
     }
+
+    // 🔥 ВК ИНТЕГРАЦИЯ И СОХРАНЕНИЕ
+    async loadGameData() {
+        try {
+            if (window.VK) {
+                console.log('📥 Loading data from VK...');
+                const data = await VK.call('storage.get', { 
+                    keys: ['balance', 'position', 'stats', 'stopLoss', 'takeProfit'] 
+                });
+                
+                if (data.balance) {
+                    this.balance = parseFloat(data.balance);
+                    console.log('✅ Balance loaded:', this.balance);
+                }
+                if (data.position && data.position !== 'null') {
+                    this.position = JSON.parse(data.position);
+                    console.log('✅ Position loaded:', this.position);
+                }
+                if (data.stats) {
+                    this.stats = JSON.parse(data.stats);
+                    console.log('✅ Stats loaded:', this.stats);
+                }
+                if (data.stopLoss) {
+                    this.stopLoss = parseFloat(data.stopLoss);
+                }
+                if (data.takeProfit) {
+                    this.takeProfit = parseFloat(data.takeProfit);
+                }
+            } else {
+                console.log('⚠️ VK not available, using default data');
+            }
+        } catch (error) {
+            console.log('❌ Failed to load data:', error);
+        }
+    }
+
+    async saveGameData() {
+        try {
+            if (window.VK) {
+                console.log('💾 Saving data to VK...');
+                await VK.call('storage.set', {
+                    balance: this.balance.toString(),
+                    position: JSON.stringify(this.position),
+                    stats: JSON.stringify(this.stats),
+                    stopLoss: this.stopLoss.toString(),
+                    takeProfit: this.takeProfit.toString()
+                });
+                console.log('✅ Data saved successfully');
+            }
+        } catch (error) {
+            console.log('❌ Failed to save data:', error);
+        }
+    }
+
+    async shareResults() {
+        try {
+            if (window.VK) {
+                const message = `🎯 My trading results:\n` +
+                               `Balance: $${this.balance.toFixed(2)}\n` +
+                               `Trades: ${this.stats.totalTrades}\n` +
+                               `Win Rate: ${this.stats.successfulTrades}\n` +
+                               `Total P&L: $${this.stats.totalProfit.toFixed(2)}\n\n` +
+                               `Try VKoin Trading! 🚀`;
+                
+                await VK.call('share', {
+                    title: 'VKoin Trading Results',
+                    text: message,
+                    link: 'https://vk.com/app51602325' // Замени на реальный ID приложения
+                });
+            } else {
+                this.showMessage('Share feature available in VK!', this.colors.warning);
+            }
+        } catch (error) {
+            console.log('Share failed:', error);
+            this.showMessage('Share to VK!', this.colors.warning);
+        }
+    }
 }
 
+// Конфигурация для VK
 const config = {
     type: Phaser.AUTO,
     width: window.innerWidth,
@@ -644,15 +733,28 @@ const config = {
     }
 };
 
-window.addEventListener('DOMContentLoaded', function() {
-    setTimeout(() => {
-        try {
+// Инициализация VK Bridge
+window.addEventListener('DOMContentLoaded', async function() {
+    try {
+        // Инициализируем VK Bridge
+        if (window.VK) {
+            await VK.init();
+            console.log('✅ VK Bridge initialized');
+        }
+        
+        // Запускаем игру
+        setTimeout(() => {
             const game = new Phaser.Game(config);
+            console.log('🎮 Phaser game started');
+            
             window.addEventListener('resize', () => {
                 game.scale.refresh();
             });
-        } catch (error) {
-            console.error('Error creating game:', error);
-        }
-    }, 100);
+            
+        }, 100);
+    } catch (error) {
+        console.error('❌ VK init failed:', error);
+        // Запускаем без VK
+        const game = new Phaser.Game(config);
+    }
 });
