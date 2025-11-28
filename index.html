@@ -1,120 +1,15 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Finance Clicker — Synthetic Market</title>
-  <link rel="stylesheet" href="style.css" />
-  <!-- Lightweight Charts -->
-  <script src="https://unpkg.com/lightweight-charts@4.4.0/dist/lightweight-charts.standalone.production.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Крипто-Гонка</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/phaser@3.55.2/dist/phaser.min.js"></script>
 </head>
 <body>
-  <div class="app">
-    <header class="header">
-      <div class="brand">
-        <h1>Finance Clicker</h1>
-        <div class="subtitle">Synthetic Market — BTC / TON / USD↔RUB</div>
-      </div>
-      <div class="balances">
-        <div>Рубли: <b id="rub">1000</b> ₽</div>
-        <div>USD: <b id="usd">0.00</b> $</div>
-        <div>BTC: <b id="btc">0.000000</b></div>
-        <div>TON: <b id="ton">0.000000</b></div>
-      </div>
-    </header>
-
-    <main class="main">
-      <aside class="left">
-        <section class="card">
-          <h3>Кликер (заработок)</h3>
-          <div class="row">
-            <input id="clickStake" type="number" value="50" min="1">
-            <select id="clickType">
-              <option value="safe">Safe</option>
-              <option value="normal" selected>Normal</option>
-              <option value="risk">Risk</option>
-            </select>
-          </div>
-          <button id="clickBtn" class="btn primary">Сделать трейд (клик)</button>
-          <div id="clickResult" class="muted">—</div>
-        </section>
-
-        <section class="card">
-          <h3>Конвертация</h3>
-          <div class="row">
-            <input id="convAmount" type="number" value="100" min="1">
-            <button id="rubToUsd" class="btn">₽ → $</button>
-            <button id="usdToRub" class="btn">$ → ₽</button>
-          </div>
-          <div class="muted">Курс (вирт) USD/RUB: <span id="fxRate">—</span></div>
-        </section>
-
-        <section class="card">
-          <h3>Депозиты (Earn)</h3>
-          <div class="row">
-            <input id="depAmount" type="number" value="10" min="1">
-            <button id="openDep" class="btn">Открыть вклад ($)</button>
-          </div>
-          <div id="depInfo" class="muted">Вкладов: 0</div>
-        </section>
-
-        <section class="card">
-          <h3>Ордер (Market)</h3>
-          <div class="row">
-            <select id="tradePair">
-              <option value="BTC">BTC/USDT</option>
-              <option value="TON">TON/USDT</option>
-            </select>
-            <input id="tradeAmount" type="number" value="10" min="1" placeholder="USDT">
-          </div>
-          <div class="row">
-            <button id="buyBtn" class="btn primary">Buy</button>
-            <button id="sellBtn" class="btn danger">Sell</button>
-          </div>
-        </section>
-      </aside>
-
-      <section class="center">
-        <div class="card chart-card">
-          <div class="chart-top">
-            <select id="assetSelect" class="asset-select">
-              <option value="BTC">BTC/USDT</option>
-              <option value="TON">TON/USDT</option>
-              <option value="RUB">USD/RUB</option>
-            </select>
-            <div class="chart-meta">
-              <div>Price: <b id="lastPrice">—</b></div>
-              <div>Volatility: <input id="volatility" type="range" min="1" max="50" value="10"></div>
-            </div>
-          </div>
-          <div id="chart" class="chart"></div>
-        </div>
-
-        <div class="card history-card">
-          <h3>История</h3>
-          <ul id="historyList"></ul>
-        </div>
-      </section>
-
-      <aside class="right">
-        <section class="card stats">
-          <h3>Статистика</h3>
-          <div>Total (RUB est): <b id="totalRub">—</b></div>
-          <div>Active players influence: <b id="influence">0</b></div>
-        </section>
-
-        <section class="card deposits">
-          <h3>Вклады</h3>
-          <div id="depositsList"></div>
-        </section>
-      </aside>
-    </main>
-
-    <footer class="footer">
-      <small>Синтетический рынок — игра. Данные генерируются локально и поддаются настройке.</small>
-    </footer>
-  </div>
-
-  <script src="script.js"></script>
+    <div id="game-container"></div>
+    <script src="vk-bridge.js"></script>
+    <script src="game.js"></script>
 </body>
 </html>
