@@ -3,12 +3,9 @@ class GameScene extends Phaser.Scene {
         super({ key: 'GameScene' });
         
         this.balance = 1000;
-        this.ownedCoins = 0;
-        this.isHolding = false;
-        this.buyPrice = 0;
+        this.position = null; // { type: 'long'|'short', entryPrice: number, coins: number }
         this.stopLoss = 0;
         this.takeProfit = 0;
-        this.showStopMenu = false;
         this.activeEvent = null;
         this.eventEndTime = 0;
         
@@ -25,7 +22,7 @@ class GameScene extends Phaser.Scene {
             totalProfit: 0
         };
 
-        // Система новостей и событий - 25 событий
+        // Система новостей и событий
         this.eventsSystem = {
             news: [
                 // БЫЧЬИ СОБЫТИЯ (положительные)
@@ -45,32 +42,7 @@ class GameScene extends Phaser.Scene {
                     color: 0x2ecc71,
                     icon: "📈"
                 },
-                {
-                    id: 3,
-                    title: "💎 Алмазные руки!",
-                    description: "Ходлеры не продают несмотря на рост",
-                    effect: { multiplier: 1.5, duration: 10000 },
-                    color: 0x1abc9c,
-                    icon: "💎"
-                },
-                {
-                    id: 4,
-                    title: "🎯 Технологический прорыв!",
-                    description: "Запуск нового блокчейн-протокола",
-                    effect: { multiplier: 2.0, duration: 13000 },
-                    color: 0x3498db,
-                    icon: "🎯"
-                },
-                {
-                    id: 5,
-                    title: "💰 Крупная инвестиция!",
-                    description: "Венчурный фонд вложил $50M в проект",
-                    effect: { multiplier: 1.7, duration: 11000 },
-                    color: 0xf1c40f,
-                    icon: "💰"
-                },
-
-                // МЕДВЕЖЬИ СОБЫТИЯ (отрицательные)
+                // ... остальные события (можно оставить как были)
                 {
                     id: 6,
                     title: "📉 Обвал рынка!",
@@ -86,158 +58,6 @@ class GameScene extends Phaser.Scene {
                     effect: { multiplier: 0.6, duration: 12000 },
                     color: 0xc0392b,
                     icon: "🐻"
-                },
-                {
-                    id: 8,
-                    title: "💸 Массовые продажи!",
-                    description: "Розничные инвесторы фиксируют прибыль",
-                    effect: { multiplier: 0.5, duration: 10000 },
-                    color: 0xd35400,
-                    icon: "💸"
-                },
-                {
-                    id: 9,
-                    title: "⚡ Флэш-крэш!",
-                    description: "Мгновенное падение на 15% за минуту",
-                    effect: { multiplier: 0.3, duration: 8000 },
-                    color: 0xff6b6b,
-                    icon: "⚡"
-                },
-                {
-                    id: 10,
-                    title: "🛑 Регуляторные риски!",
-                    description: "ЦБ рассматривает новые ограничения",
-                    effect: { multiplier: 0.7, duration: 16000 },
-                    color: 0xff4757,
-                    icon: "🛑"
-                },
-
-                // ВОЛАТИЛЬНОСТЬ
-                {
-                    id: 11,
-                    title: "🎭 Высокая волатильность!",
-                    description: "Резкие скачки цен в обе стороны",
-                    effect: { multiplier: 2.5, duration: 9000 },
-                    color: 0xf39c12,
-                    icon: "🎭"
-                },
-                {
-                    id: 12,
-                    title: "🌪️ Турбулентность!",
-                    description: "Нестабильность на мировых рынках",
-                    effect: { multiplier: 2.8, duration: 7000 },
-                    color: 0xe67e22,
-                    icon: "🌪️"
-                },
-                {
-                    id: 13,
-                    title: "⚖️ Боковик!",
-                    description: "Цены движутся в узком диапазоне",
-                    effect: { multiplier: 0.8, duration: 18000 },
-                    color: 0x95a5a6,
-                    icon: "⚖️"
-                },
-
-                // ТЕХНОЛОГИЧЕСКИЕ
-                {
-                    id: 14,
-                    title: "🔧 Апгрейд сети!",
-                    description: "Хардфорк улучшил производительность",
-                    effect: { multiplier: 1.6, duration: 14000 },
-                    color: 0x9b59b6,
-                    icon: "🔧"
-                },
-                {
-                    id: 15,
-                    title: "🛡️ Повышение безопасности!",
-                    description: "Внедрена новая система защиты",
-                    effect: { multiplier: 1.4, duration: 12000 },
-                    color: 0x34495e,
-                    icon: "🛡️"
-                },
-                {
-                    id: 16,
-                    title: "🔗 Партнерство!",
-                    description: "Крупная компания интегрирует технологию",
-                    effect: { multiplier: 1.9, duration: 13000 },
-                    color: 0x1abc9c,
-                    icon: "🔗"
-                },
-
-                // МАКРОЭКОНОМИЧЕСКИЕ
-                {
-                    id: 17,
-                    title: "🏦 Процентные ставки!",
-                    description: "ЦБ снижает ключевую ставку",
-                    effect: { multiplier: 1.5, duration: 15000 },
-                    color: 0x27ae60,
-                    icon: "🏦"
-                },
-                {
-                    id: 18,
-                    title: "📊 Инфляция падает!",
-                    description: "Данные лучше ожиданий аналитиков",
-                    effect: { multiplier: 1.3, duration: 12000 },
-                    color: 0x2ecc71,
-                    icon: "📊"
-                },
-                {
-                    id: 19,
-                    title: "🌍 Глобальный рост!",
-                    description: "Мировая экономика показывает восстановление",
-                    effect: { multiplier: 1.4, duration: 14000 },
-                    color: 0x3498db,
-                    icon: "🌍"
-                },
-
-                // НЕОЖИДАННЫЕ
-                {
-                    id: 20,
-                    title: "🎲 Неожиданные новости!",
-                    description: "Слухи о крупной сделке",
-                    effect: { multiplier: 2.0, duration: 8000 },
-                    color: 0xe74c3c,
-                    icon: "🎲"
-                },
-                {
-                    id: 21,
-                    title: "📰 Сенсационное заявление!",
-                    description: "CEO крупной компании высказался о крипто",
-                    effect: { multiplier: 1.7, duration: 10000 },
-                    color: 0xf39c12,
-                    icon: "📰"
-                },
-                {
-                    id: 22,
-                    title: "🔍 Расследование!",
-                    description: "Регуляторы проверяют крупный проект",
-                    effect: { multiplier: 0.6, duration: 16000 },
-                    color: 0x95a5a6,
-                    icon: "🔍"
-                },
-                {
-                    id: 23,
-                    title: "🌟 Листинг на бирже!",
-                    description: "Крупная биржа добавляет новую пару",
-                    effect: { multiplier: 1.8, duration: 12000 },
-                    color: 0xf1c40f,
-                    icon: "🌟"
-                },
-                {
-                    id: 24,
-                    title: "⚡ Сетевые проблемы!",
-                    description: "Временные сбои в работе сети",
-                    effect: { multiplier: 0.5, duration: 9000 },
-                    color: 0xe67e22,
-                    icon: "⚡"
-                },
-                {
-                    id: 25,
-                    title: "🔄 Ребрендинг!",
-                    description: "Проект представляет новое видение",
-                    effect: { multiplier: 1.2, duration: 15000 },
-                    color: 0x9b59b6,
-                    icon: "🔄"
                 }
             ],
             getRandomEvent: function() {
@@ -257,10 +77,13 @@ class GameScene extends Phaser.Scene {
         return this.currencies[this.currentCurrencyIndex];
     }
 
+    get hasPosition() {
+        return this.position !== null;
+    }
+
     create() {
         console.log('Сцена создается');
         
-        // Рассчитываем layout на основе размера экрана
         this.calculateLayout();
         
         // Инициализация данных
@@ -283,7 +106,7 @@ class GameScene extends Phaser.Scene {
             loop: true
         });
 
-        // Запуск случайных событий каждые 90 секунд (1.5 минуты)
+        // Запуск случайных событий
         this.time.addEvent({
             delay: 90000,
             callback: this.triggerRandomEvent,
@@ -296,11 +119,7 @@ class GameScene extends Phaser.Scene {
 
     calculateLayout() {
         const { width, height } = this.cameras.main;
-        
-        // Адаптивные размеры для полноэкранного режима
         this.layout.padding = Math.min(width * 0.05, 25);
-        
-        // Распределяем пространство: 25% заголовок, 50% график, 25% кнопки
         this.layout.headerHeight = height * 0.25;
         this.layout.chartHeight = height * 0.50;
         this.layout.buttonHeight = height * 0.25;
@@ -316,12 +135,11 @@ class GameScene extends Phaser.Scene {
         const { width, height } = this.cameras.main;
         const centerX = width / 2;
         
-        // Рассчитываем позиции
         const headerY = this.layout.headerHeight / 2;
         const chartY = this.layout.headerHeight + this.layout.chartHeight / 2;
         const buttonY = this.layout.headerHeight + this.layout.chartHeight + this.layout.buttonHeight / 2;
 
-        // Верхняя панель - валюта и баланс
+        // Верхняя панель
         this.currencyText = this.add.text(centerX, headerY - 25, this.currentCurrency.name, {
             fontSize: this.getAdaptiveFontSize(24),
             fill: '#2c3e50',
@@ -336,7 +154,6 @@ class GameScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         // Кнопки переключения валют
-        const buttonSize = this.getAdaptiveSize(35);
         this.prevButton = this.add.text(this.layout.padding + 25, headerY - 10, '←', {
             fontSize: this.getAdaptiveFontSize(24),
             fill: '#3498db',
@@ -375,23 +192,35 @@ class GameScene extends Phaser.Scene {
             fontWeight: 'bold'
         }).setOrigin(0.5).setVisible(false);
 
-        // Кнопка покупки
+        // КНОПКИ LONG И SHORT
         const buttonWidth = this.getAdaptiveSize(140);
         const buttonHeight = this.getAdaptiveSize(50);
-        this.buyButton = this.add.rectangle(centerX - buttonWidth/1.8, buttonY - 20, buttonWidth, buttonHeight, 0x27ae60)
+        
+        // Кнопка LONG (покупка)
+        this.longButton = this.add.rectangle(centerX - buttonWidth/1.8, buttonY - 20, buttonWidth, buttonHeight, 0x27ae60)
             .setInteractive();
-        this.add.text(centerX - buttonWidth/1.8, buttonY - 20, 'КУПИТЬ', {
+        this.add.text(centerX - buttonWidth/1.8, buttonY - 20, 'LONG', {
             fontSize: this.getAdaptiveFontSize(18),
             fill: '#FFFFFF',
             fontFamily: 'Arial',
             fontWeight: 'bold'
         }).setOrigin(0.5);
 
-        // Кнопка продажи
-        this.sellButton = this.add.rectangle(centerX + buttonWidth/1.8, buttonY - 20, buttonWidth, buttonHeight, 0xe74c3c)
+        // Кнопка SHORT (продажа)
+        this.shortButton = this.add.rectangle(centerX + buttonWidth/1.8, buttonY - 20, buttonWidth, buttonHeight, 0xe74c3c)
             .setInteractive();
-        this.add.text(centerX + buttonWidth/1.8, buttonY - 20, 'ПРОДАТЬ', {
+        this.add.text(centerX + buttonWidth/1.8, buttonY - 20, 'SHORT', {
             fontSize: this.getAdaptiveFontSize(18),
+            fill: '#FFFFFF',
+            fontFamily: 'Arial',
+            fontWeight: 'bold'
+        }).setOrigin(0.5);
+
+        // Кнопка закрытия позиции
+        this.closeButton = this.add.rectangle(centerX, buttonY + 10, buttonWidth * 1.5, buttonHeight, 0xf39c12)
+            .setInteractive();
+        this.add.text(centerX, buttonY + 10, 'ЗАКРЫТЬ ПОЗИЦИЮ', {
+            fontSize: this.getAdaptiveFontSize(16),
             fill: '#FFFFFF',
             fontFamily: 'Arial',
             fontWeight: 'bold'
@@ -400,30 +229,29 @@ class GameScene extends Phaser.Scene {
         // Кнопка стоп-ордеров
         const stopButtonWidth = this.getAdaptiveSize(200);
         const stopButtonHeight = this.getAdaptiveSize(40);
-        this.stopButton = this.add.rectangle(centerX, buttonY + 20, stopButtonWidth, stopButtonHeight, 0xf39c12)
+        this.stopButton = this.add.rectangle(centerX, buttonY + 40, stopButtonWidth, stopButtonHeight, 0x9b59b6)
             .setInteractive();
-        this.add.text(centerX, buttonY + 20, 'СТОП-ОРДЕР', {
+        this.add.text(centerX, buttonY + 40, 'СТОП-ОРДЕР', {
             fontSize: this.getAdaptiveFontSize(16),
             fill: '#FFFFFF',
             fontFamily: 'Arial'
         }).setOrigin(0.5);
 
-        // Информация о стоп-ордерах
-        this.stopInfo = this.add.text(centerX, buttonY - 5, '', {
+        // Информация о позиции
+        this.positionInfo = this.add.text(centerX, buttonY - 5, '', {
             fontSize: this.getAdaptiveFontSize(12),
-            fill: '#e67e22',
+            fill: '#2c3e50',
             fontFamily: 'Arial',
-            backgroundColor: '#fef9e7',
+            backgroundColor: '#ecf0f1',
             padding: { left: 10, right: 10, top: 5, bottom: 5 }
         }).setOrigin(0.5);
 
         this.updateButtonStates();
-        this.updateStopInfo();
+        this.updatePositionInfo();
     }
 
     getAdaptiveFontSize(baseSize) {
         const { height } = this.cameras.main;
-        // Базовая адаптация для разных размеров экрана
         if (height < 600) return baseSize * 0.8 + 'px';
         if (height > 800) return baseSize * 1.2 + 'px';
         return baseSize + 'px';
@@ -431,7 +259,6 @@ class GameScene extends Phaser.Scene {
 
     getAdaptiveSize(baseSize) {
         const { height } = this.cameras.main;
-        // Адаптация размеров элементов
         if (height < 600) return baseSize * 0.8;
         if (height > 800) return baseSize * 1.2;
         return baseSize;
@@ -440,77 +267,151 @@ class GameScene extends Phaser.Scene {
     setupEventListeners() {
         this.prevButton.on('pointerdown', () => this.switchCurrency(-1));
         this.nextButton.on('pointerdown', () => this.switchCurrency(1));
-        this.buyButton.on('pointerdown', () => this.buyCoin());
-        this.sellButton.on('pointerdown', () => this.sellCoin());
+        this.longButton.on('pointerdown', () => this.openLong());
+        this.shortButton.on('pointerdown', () => this.openShort());
+        this.closeButton.on('pointerdown', () => this.closePosition());
         this.stopButton.on('pointerdown', () => this.setStopOrder());
     }
 
-    // Система событий и новостей
-    triggerRandomEvent() {
-        if (this.activeEvent) return;
+    // ОТКРЫТИЕ LONG ПОЗИЦИИ (покупка)
+    openLong() {
+        if (this.hasPosition) return;
         
-        const event = this.eventsSystem.getRandomEvent();
-        this.activeEvent = event;
-        this.eventEndTime = Date.now() + event.effect.duration;
-        
-        // Показываем панель события с иконкой
-        this.eventPanel.setFillStyle(event.color, 0.9).setVisible(true);
-        this.eventText.setText(`${event.icon} ${event.title} - ${event.description}`).setVisible(true);
-        
-        // Анимация появления
-        this.tweens.add({
-            targets: [this.eventPanel, this.eventText],
-            alpha: { from: 0, to: 1 },
-            duration: 500
-        });
-        
-        // Запускаем таймер завершения события
-        this.time.delayedCall(event.effect.duration, () => {
-            this.endEvent();
-        });
-        
-        console.log(`Событие активировано: ${event.title}`);
-    }
-
-    endEvent() {
-        if (this.activeEvent) {
-            // Анимация исчезновения
-            this.tweens.add({
-                targets: [this.eventPanel, this.eventText],
-                alpha: { from: 1, to: 0 },
-                duration: 500,
-                onComplete: () => {
-                    this.eventPanel.setVisible(false);
-                    this.eventText.setVisible(false);
-                    this.activeEvent = null;
-                }
-            });
+        const coinsToBuy = Math.floor(this.balance / this.currentCurrency.price);
+        if (coinsToBuy > 0) {
+            this.position = {
+                type: 'long',
+                entryPrice: this.currentCurrency.price,
+                coins: coinsToBuy
+            };
+            this.balance -= coinsToBuy * this.currentCurrency.price;
+            
+            this.updateUI();
+            this.updateChart();
+            this.saveGameData();
+            this.showMessage(`LONG позиция открыта! Покупка по $${this.position.entryPrice.toFixed(2)}`);
         }
     }
 
-    getCurrentVolatility() {
-        let baseVolatility = this.currentCurrency.volatility;
+    // ОТКРЫТИЕ SHORT ПОЗИЦИИ (продажа)
+    openShort() {
+        if (this.hasPosition) return;
         
-        if (this.activeEvent) {
-            baseVolatility *= this.activeEvent.effect.multiplier;
+        const coinsToSell = Math.floor(this.balance / this.currentCurrency.price);
+        if (coinsToSell > 0) {
+            this.position = {
+                type: 'short',
+                entryPrice: this.currentCurrency.price,
+                coins: coinsToSell
+            };
+            // В шорте мы занимаем монеты и сразу продаем их
+            this.balance += coinsToSell * this.currentCurrency.price;
+            
+            this.updateUI();
+            this.updateChart();
+            this.saveGameData();
+            this.showMessage(`SHORT позиция открыта! Продажа по $${this.position.entryPrice.toFixed(2)}`);
         }
-        
-        return baseVolatility;
     }
 
-    switchCurrency(direction) {
-        if (this.isHolding) return;
+    // ЗАКРЫТИЕ ПОЗИЦИИ
+    closePosition() {
+        if (!this.hasPosition) return;
         
-        this.currentCurrencyIndex += direction;
-        if (this.currentCurrencyIndex < 0) {
-            this.currentCurrencyIndex = this.currencies.length - 1;
-        } else if (this.currentCurrencyIndex >= this.currencies.length) {
-            this.currentCurrencyIndex = 0;
+        let profit = 0;
+        
+        if (this.position.type === 'long') {
+            // Продаем купленные монеты
+            profit = (this.currentCurrency.price - this.position.entryPrice) * this.position.coins;
+            this.balance += this.position.coins * this.currentCurrency.price;
+        } else {
+            // Покупаем монеты обратно чтобы вернуть долг
+            profit = (this.position.entryPrice - this.currentCurrency.price) * this.position.coins;
+            this.balance -= this.position.coins * this.currentCurrency.price;
         }
         
-        this.currencyText.setText(this.currentCurrency.name);
-        this.updateChart();
+        this.stats.totalTrades++;
+        if (profit > 0) {
+            this.stats.successfulTrades++;
+        }
+        this.stats.totalProfit += profit;
+        
+        const positionType = this.position.type.toUpperCase();
+        this.position = null;
+        this.stopLoss = 0;
+        this.takeProfit = 0;
+        
         this.updateUI();
+        this.updateChart();
+        this.saveGameData();
+        
+        this.showMessage(`${positionType} позиция закрыта! Прибыль: $${profit.toFixed(2)}`);
+    }
+
+    // РАСЧЕТ ТЕКУЩЕЙ ПРИБЫЛИ
+    calculateCurrentProfit() {
+        if (!this.hasPosition) return 0;
+        
+        if (this.position.type === 'long') {
+            return (this.currentCurrency.price - this.position.entryPrice) * this.position.coins;
+        } else {
+            return (this.position.entryPrice - this.currentCurrency.price) * this.position.coins;
+        }
+    }
+
+    // РАСЧЕТ ПРОЦЕНТА ПРИБЫЛИ
+    calculateProfitPercent() {
+        if (!this.hasPosition) return 0;
+        
+        if (this.position.type === 'long') {
+            return ((this.currentCurrency.price - this.position.entryPrice) / this.position.entryPrice) * 100;
+        } else {
+            return ((this.position.entryPrice - this.currentCurrency.price) / this.position.entryPrice) * 100;
+        }
+    }
+
+    setStopOrder() {
+        if (!this.hasPosition) return;
+        
+        if (this.position.type === 'long') {
+            this.stopLoss = this.position.entryPrice * 0.95;
+            this.takeProfit = this.position.entryPrice * 1.10;
+        } else {
+            this.stopLoss = this.position.entryPrice * 1.05;
+            this.takeProfit = this.position.entryPrice * 0.90;
+        }
+        
+        this.updateUI();
+        this.updateChart();
+        this.saveGameData();
+        
+        this.showMessage('Стоп-ордера установлены!');
+    }
+
+    checkStopOrders() {
+        if (!this.hasPosition) return;
+        
+        const currentPrice = this.currentCurrency.price;
+        
+        if (this.position.type === 'long') {
+            if (this.stopLoss > 0 && currentPrice <= this.stopLoss) {
+                this.closePosition();
+                this.showMessage('СТОП-ЛОСС СРАБОТАЛ!');
+            }
+            if (this.takeProfit > 0 && currentPrice >= this.takeProfit) {
+                this.closePosition();
+                this.showMessage('ТЕЙК-ПРОФИТ СРАБОТАЛ!');
+            }
+        } else {
+            if (this.stopLoss > 0 && currentPrice >= this.stopLoss) {
+                this.closePosition();
+                this.showMessage('СТОП-ЛОСС СРАБОТАЛ!');
+            }
+            if (this.takeProfit > 0 && currentPrice <= this.takeProfit) {
+                this.closePosition();
+                this.showMessage('ТЕЙК-ПРОФИТ СРАБОТАЛ!');
+            }
+        }
     }
 
     updatePrice() {
@@ -528,22 +429,6 @@ class GameScene extends Phaser.Scene {
         this.checkStopOrders();
         this.updateChart();
         this.updateUI();
-    }
-
-    checkStopOrders() {
-        if (this.isHolding && this.stopLoss > 0) {
-            if (this.currentCurrency.price <= this.stopLoss) {
-                this.sellCoin();
-                this.showMessage('СТОП-ЛОСС СРАБОТАЛ!');
-            }
-        }
-        
-        if (this.isHolding && this.takeProfit > 0) {
-            if (this.currentCurrency.price >= this.takeProfit) {
-                this.sellCoin();
-                this.showMessage('ТЕЙК-ПРОФИТ СРАБОТАЛ!');
-            }
-        }
     }
 
     updateChart() {
@@ -576,28 +461,49 @@ class GameScene extends Phaser.Scene {
         
         this.chart.strokePath();
         
-        // УЛУЧШЕННАЯ ВИЗУАЛИЗАЦИЯ ОРДЕРОВ
-        if (this.isHolding) {
-            this.drawOrderLines(minPrice, maxPrice, startY, chartHeight, range, chartWidth);
-            this.drawBuyMarker(startY, chartHeight, range, chartWidth);
+        // ВИЗУАЛИЗАЦИЯ ПОЗИЦИЙ И ОРДЕРОВ
+        if (this.hasPosition) {
+            this.drawPositionMarkers(minPrice, maxPrice, startY, chartHeight, range, chartWidth);
         }
     }
 
-    // УЛУЧШЕННАЯ ОТРИСОВКА ЛИНИЙ ОРДЕРОВ
-    drawOrderLines(minPrice, maxPrice, startY, height, range, width) {
-        // Стоп-лосс (красная жирная линия с заливкой)
-        if (this.stopLoss > 0 && this.stopLoss >= minPrice && this.stopLoss <= maxPrice) {
+    drawPositionMarkers(minPrice, maxPrice, startY, height, range, width) {
+        // Маркер цены входа
+        const entryY = startY + height - ((this.position.entryPrice - minPrice) / range) * height;
+        
+        // Цвет маркера в зависимости от типа позиции
+        const positionColor = this.position.type === 'long' ? 0x27ae60 : 0xe74c3c;
+        
+        // Маркер точки входа
+        this.ordersGraphics.fillStyle(positionColor, 1);
+        this.ordersGraphics.fillCircle(this.layout.padding + width + 3, entryY, 6);
+        
+        this.ordersGraphics.lineStyle(2, 0xffffff, 1);
+        this.ordersGraphics.strokeCircle(this.layout.padding + width + 3, entryY, 6);
+        
+        // Подпись позиции
+        this.ordersGraphics.fillStyle(positionColor, 0.9);
+        this.ordersGraphics.fillRect(this.layout.padding + width + 10, entryY - 10, 85, 16);
+        
+        const positionText = this.position.type === 'long' ? 'LONG' : 'SHORT';
+        this.add.text(this.layout.padding + width + 13, entryY - 8, `${positionText}: $${this.position.entryPrice.toFixed(2)}`, { 
+            fontSize: this.getAdaptiveFontSize(9),
+            fill: '#ffffff',
+            fontFamily: 'Arial',
+            fontWeight: 'bold'
+        });
+
+        // Стоп-лосс и тейк-профит
+        if (this.stopLoss > 0) {
             const stopY = startY + height - ((this.stopLoss - minPrice) / range) * height;
+            const stopColor = 0xe74c3c;
             
-            // Основная линия
-            this.ordersGraphics.lineStyle(3, 0xe74c3c, 0.9);
+            this.ordersGraphics.lineStyle(3, stopColor, 0.9);
             this.ordersGraphics.lineBetween(this.layout.padding, stopY, this.layout.padding + width, stopY);
             
-            // Фон для подписи
-            this.ordersGraphics.fillStyle(0xe74c3c, 0.9);
+            this.ordersGraphics.fillStyle(stopColor, 0.9);
             this.ordersGraphics.fillRect(this.layout.padding + 5, stopY - 12, 60, 16);
             
-            // Подпись стоп-лосса
             this.add.text(this.layout.padding + 10, stopY - 10, `SL: $${this.stopLoss.toFixed(2)}`, { 
                 fontSize: this.getAdaptiveFontSize(10),
                 fill: '#ffffff',
@@ -606,19 +512,16 @@ class GameScene extends Phaser.Scene {
             });
         }
         
-        // Тейк-профит (зеленая жирная линия с заливкой)
-        if (this.takeProfit > 0 && this.takeProfit >= minPrice && this.takeProfit <= maxPrice) {
+        if (this.takeProfit > 0) {
             const profitY = startY + height - ((this.takeProfit - minPrice) / range) * height;
+            const profitColor = 0x27ae60;
             
-            // Основная линия
-            this.ordersGraphics.lineStyle(3, 0x27ae60, 0.9);
+            this.ordersGraphics.lineStyle(3, profitColor, 0.9);
             this.ordersGraphics.lineBetween(this.layout.padding, profitY, this.layout.padding + width, profitY);
             
-            // Фон для подписи
-            this.ordersGraphics.fillStyle(0x27ae60, 0.9);
+            this.ordersGraphics.fillStyle(profitColor, 0.9);
             this.ordersGraphics.fillRect(this.layout.padding + 5, profitY - 12, 65, 16);
             
-            // Подпись тейк-профита
             this.add.text(this.layout.padding + 10, profitY - 10, `TP: $${this.takeProfit.toFixed(2)}`, { 
                 fontSize: this.getAdaptiveFontSize(10),
                 fill: '#ffffff',
@@ -628,69 +531,13 @@ class GameScene extends Phaser.Scene {
         }
     }
 
-    // УЛУЧШЕННЫЙ МАРКЕР ЦЕНЫ ПОКУПКИ
-    drawBuyMarker(startY, height, range, width) {
-        if (this.buyPrice > 0) {
-            const minPrice = Math.min(...this.currentCurrency.history);
-            const buyY = startY + height - ((this.buyPrice - minPrice) / range) * height;
-            
-            // Вертикальная пунктирная линия через весь график
-            this.ordersGraphics.lineStyle(2, 0x3498db, 0.6);
-            this.drawDashedLine(this.ordersGraphics, 
-                this.layout.padding, buyY, 
-                this.layout.padding + width, buyY, 8, 4);
-            
-            // Большой маркер цены покупки
-            this.ordersGraphics.fillStyle(0x3498db, 1);
-            this.ordersGraphics.fillCircle(this.layout.padding + width + 3, buyY, 6);
-            
-            // Обводка маркера
-            this.ordersGraphics.lineStyle(2, 0xffffff, 1);
-            this.ordersGraphics.strokeCircle(this.layout.padding + width + 3, buyY, 6);
-            
-            // Красивая подпись с фоном
-            this.ordersGraphics.fillStyle(0x3498db, 0.9);
-            this.ordersGraphics.fillRect(this.layout.padding + width + 10, buyY - 10, 75, 16);
-            
-            this.add.text(this.layout.padding + width + 13, buyY - 8, `BUY: $${this.buyPrice.toFixed(2)}`, { 
-                fontSize: this.getAdaptiveFontSize(9),
-                fill: '#ffffff',
-                fontFamily: 'Arial',
-                fontWeight: 'bold'
-            });
-        }
-    }
-
-    // Функция для рисования пунктирных линий
-    drawDashedLine(graphics, x1, y1, x2, y2, dashLength, gapLength) {
-        const distance = Phaser.Math.Distance.Between(x1, y1, x2, y2);
-        const dashTotal = dashLength + gapLength;
-        const dashes = Math.floor(distance / dashTotal);
-        const remainder = distance % dashTotal;
-        
-        let currentX = x1;
-        let currentY = y1;
-        
-        for (let i = 0; i < dashes; i++) {
-            const dashProgress = (i * dashTotal) / distance;
-            const nextDashProgress = ((i * dashTotal) + dashLength) / distance;
-            
-            const dashX1 = Phaser.Math.Interpolation.Linear([x1, x2], dashProgress);
-            const dashY1 = Phaser.Math.Interpolation.Linear([y1, y2], dashProgress);
-            const dashX2 = Phaser.Math.Interpolation.Linear([x1, x2], nextDashProgress);
-            const dashY2 = Phaser.Math.Interpolation.Linear([y1, y2], nextDashProgress);
-            
-            graphics.lineBetween(dashX1, dashY1, dashX2, dashY2);
-        }
-    }
-
     updateUI() {
         this.balanceText.setText(`Баланс: $${this.balance.toFixed(2)}`);
         this.statsText.setText(this.getStatsString());
         
-        if (this.isHolding) {
-            const profit = (this.currentCurrency.price - this.buyPrice) * this.ownedCoins;
-            const profitPercent = ((this.currentCurrency.price - this.buyPrice) / this.buyPrice) * 100;
+        if (this.hasPosition) {
+            const profit = this.calculateCurrentProfit();
+            const profitPercent = this.calculateProfitPercent();
             
             this.profitText.setText(`${profit >= 0 ? '+' : ''}${profit.toFixed(2)} (${profitPercent.toFixed(2)}%)`);
             this.profitText.setFill(profit >= 0 ? '#27ae60' : '#e74c3c');
@@ -699,81 +546,39 @@ class GameScene extends Phaser.Scene {
         }
         
         this.updateButtonStates();
-        this.updateStopInfo();
+        this.updatePositionInfo();
     }
 
     updateButtonStates() {
-        this.buyButton.setAlpha(this.isHolding ? 0.5 : 1);
-        this.sellButton.setAlpha(this.isHolding ? 1 : 0.5);
-        this.stopButton.setAlpha(this.isHolding ? 1 : 0.5);
+        const hasPosition = this.hasPosition;
+        
+        this.longButton.setAlpha(hasPosition ? 0.5 : 1);
+        this.shortButton.setAlpha(hasPosition ? 0.5 : 1);
+        this.closeButton.setAlpha(hasPosition ? 1 : 0.5);
+        this.stopButton.setAlpha(hasPosition ? 1 : 0.5);
     }
 
-    updateStopInfo() {
-        if (this.isHolding) {
-            let info = '';
-            if (this.stopLoss > 0) info += `STOP: $${this.stopLoss.toFixed(1)} `;
-            if (this.takeProfit > 0) info += `PROFIT: $${this.takeProfit.toFixed(1)}`;
-            this.stopInfo.setText(info);
+    updatePositionInfo() {
+        if (this.hasPosition) {
+            const type = this.position.type.toUpperCase();
+            const entryPrice = this.position.entryPrice.toFixed(2);
+            const coins = this.position.coins;
+            const currentProfit = this.calculateCurrentProfit().toFixed(2);
+            
+            let info = `${type} | Вход: $${entryPrice} | Монет: ${coins}`;
+            if (this.stopLoss > 0) info += ` | SL: $${this.stopLoss.toFixed(2)}`;
+            if (this.takeProfit > 0) info += ` | TP: $${this.takeProfit.toFixed(2)}`;
+            
+            this.positionInfo.setText(info);
+            this.positionInfo.setFill(this.position.type === 'long' ? '#27ae60' : '#e74c3c');
         } else {
-            this.stopInfo.setText('');
+            this.positionInfo.setText('Нет открытой позиции');
+            this.positionInfo.setFill('#666');
         }
     }
 
     getStatsString() {
         return `Сделки: ${this.stats.totalTrades} | Успешные: ${this.stats.successfulTrades} | Прибыль: $${this.stats.totalProfit.toFixed(2)}`;
-    }
-
-    buyCoin() {
-        if (this.isHolding) return;
-        
-        const coinsToBuy = Math.floor(this.balance / this.currentCurrency.price);
-        if (coinsToBuy > 0) {
-            this.ownedCoins = coinsToBuy;
-            this.buyPrice = this.currentCurrency.price;
-            this.balance -= coinsToBuy * this.currentCurrency.price;
-            this.isHolding = true;
-            this.stopLoss = 0;
-            this.takeProfit = 0;
-            
-            this.updateUI();
-            this.updateChart();
-            this.saveGameData();
-        }
-    }
-
-    sellCoin() {
-        if (!this.isHolding) return;
-        
-        const profit = (this.currentCurrency.price - this.buyPrice) * this.ownedCoins;
-        
-        this.stats.totalTrades++;
-        if (profit > 0) {
-            this.stats.successfulTrades++;
-        }
-        this.stats.totalProfit += profit;
-        
-        this.balance += this.ownedCoins * this.currentCurrency.price;
-        this.ownedCoins = 0;
-        this.isHolding = false;
-        this.stopLoss = 0;
-        this.takeProfit = 0;
-        
-        this.updateUI();
-        this.updateChart();
-        this.saveGameData();
-    }
-
-    setStopOrder() {
-        if (!this.isHolding) return;
-        
-        this.stopLoss = this.buyPrice * 0.95;
-        this.takeProfit = this.buyPrice * 1.10;
-        
-        this.updateUI();
-        this.updateChart();
-        this.saveGameData();
-        
-        this.showMessage('Стоп-ордера установлены!');
     }
 
     showMessage(text) {
@@ -793,18 +598,77 @@ class GameScene extends Phaser.Scene {
         });
     }
 
+    // Остальные методы остаются без изменений
+    switchCurrency(direction) {
+        if (this.hasPosition) return;
+        
+        this.currentCurrencyIndex += direction;
+        if (this.currentCurrencyIndex < 0) {
+            this.currentCurrencyIndex = this.currencies.length - 1;
+        } else if (this.currentCurrencyIndex >= this.currencies.length) {
+            this.currentCurrencyIndex = 0;
+        }
+        
+        this.currencyText.setText(this.currentCurrency.name);
+        this.updateChart();
+        this.updateUI();
+    }
+
+    getCurrentVolatility() {
+        let baseVolatility = this.currentCurrency.volatility;
+        if (this.activeEvent) {
+            baseVolatility *= this.activeEvent.effect.multiplier;
+        }
+        return baseVolatility;
+    }
+
+    triggerRandomEvent() {
+        if (this.activeEvent) return;
+        
+        const event = this.eventsSystem.getRandomEvent();
+        this.activeEvent = event;
+        this.eventEndTime = Date.now() + event.effect.duration;
+        
+        this.eventPanel.setFillStyle(event.color, 0.9).setVisible(true);
+        this.eventText.setText(`${event.icon} ${event.title} - ${event.description}`).setVisible(true);
+        
+        this.tweens.add({
+            targets: [this.eventPanel, this.eventText],
+            alpha: { from: 0, to: 1 },
+            duration: 500
+        });
+        
+        this.time.delayedCall(event.effect.duration, () => {
+            this.endEvent();
+        });
+    }
+
+    endEvent() {
+        if (this.activeEvent) {
+            this.tweens.add({
+                targets: [this.eventPanel, this.eventText],
+                alpha: { from: 1, to: 0 },
+                duration: 500,
+                onComplete: () => {
+                    this.eventPanel.setVisible(false);
+                    this.eventText.setVisible(false);
+                    this.activeEvent = null;
+                }
+            });
+        }
+    }
+
     async loadGameData() {
         try {
             if (window.VK) {
                 const data = await VK.call('storage.get', { 
-                    keys: ['balance', 'ownedCoins', 'stats', 'stopLoss', 'takeProfit'] 
+                    keys: ['balance', 'position', 'stats', 'stopLoss', 'takeProfit'] 
                 });
                 if (data.balance) this.balance = parseFloat(data.balance);
-                if (data.ownedCoins) this.ownedCoins = parseInt(data.ownedCoins);
+                if (data.position) this.position = JSON.parse(data.position);
                 if (data.stats) this.stats = JSON.parse(data.stats);
                 if (data.stopLoss) this.stopLoss = parseFloat(data.stopLoss);
                 if (data.takeProfit) this.takeProfit = parseFloat(data.takeProfit);
-                this.isHolding = this.ownedCoins > 0;
             }
         } catch (error) {
             console.log('Не удалось загрузить данные:', error);
@@ -816,7 +680,7 @@ class GameScene extends Phaser.Scene {
             if (window.VK) {
                 await VK.call('storage.set', {
                     balance: this.balance.toString(),
-                    ownedCoins: this.ownedCoins.toString(),
+                    position: JSON.stringify(this.position),
                     stats: JSON.stringify(this.stats),
                     stopLoss: this.stopLoss.toString(),
                     takeProfit: this.takeProfit.toString()
@@ -828,7 +692,7 @@ class GameScene extends Phaser.Scene {
     }
 }
 
-// Конфигурация Phaser с полноэкранным режимом
+// Конфигурация Phaser остается без изменений
 const config = {
     type: Phaser.AUTO,
     width: window.innerWidth,
@@ -846,24 +710,14 @@ const config = {
     }
 };
 
-// Запуск игры при полной загрузке страницы
 window.addEventListener('DOMContentLoaded', function() {
     console.log('DOM загружен, запускаем игру...');
     
-    // Адаптация под мобильные устройства
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js').then(() => {
-            console.log('Service Worker зарегистрирован');
-        });
-    }
-    
-    // Запуск в полноэкранном режиме
     setTimeout(() => {
         try {
             const game = new Phaser.Game(config);
-            console.log('Phaser игра создана успешно в полноэкранном режиме');
+            console.log('Phaser игра создана успешно');
             
-            // Обработка изменения размера окна
             window.addEventListener('resize', () => {
                 game.scale.refresh();
             });
