@@ -1,53 +1,45 @@
 class GameScene extends Phaser.Scene {
     constructor() {
         super({ key: 'GameScene' });
+        
         this.balance = 1000;
         this.ownedCoins = 0;
-        this.currentCurrencies = [
-            { name: 'VKoin', price: 100, history: [], color: 0x3498db },
-            { name: 'Memecoin', price: 50, history: [], color: 0xe74c3c },
-            { name: 'Social Token', price: 200, history: [], color: 0x9b59b6 }
-        ];
-        this.currentCurrencyIndex = 0;
         this.isHolding = false;
         this.buyPrice = 0;
+        
+        this.currencies = [
+            { name: 'VKoin', price: 100, history: [], color: 0x3498db, volatility: 1.5 },
+            { name: 'Memecoin', price: 50, history: [], color: 0xe74c3c, volatility: 3.0 },
+            { name: 'Social Token', price: 200, history: [], color: 0x9b59b6, volatility: 0.8 }
+        ];
+        this.currentCurrencyIndex = 0;
+        
         this.stats = {
             totalTrades: 0,
             successfulTrades: 0,
             totalProfit: 0
         };
         
-        // Размеры для графика
-        this.chartWidth = 380;
-        this.chartHeight = 300;
+        // UI элементы
+        this.balanceText = null;
+        this.currencyText = null;
+        this.profitText = null;
+        this.statsText = null;
+        this.buyButton = null;
+        this.sellButton = null;
     }
 
     get currentCurrency() {
-        return this.currentCurrencies[this.currentCurrencyIndex];
-    }
-
-    get currentPrice() {
-        return this.currentCurrency.price;
-    }
-
-    set currentPrice(value) {
-        this.currentCurrency.price = value;
-    }
-
-    get priceHistory() {
-        return this.currentCurrency.history;
-    }
-
-    init() {
-        this.loadGameData();
+        return this.currencies[this.currentCurrencyIndex];
     }
 
     create() {
-        // Сначала создаем UI
-        this.createUI();
-        // Затем график
+        this.loadGameData();
         this.createChart();
+        this.createUI();
+        this.setupEventListeners();
         
+        // Запускаем обновление цены
         this.time.addEvent({
             delay: 200,
             callback: this.updatePrice,
@@ -57,104 +49,108 @@ class GameScene extends Phaser.Scene {
     }
 
     createChart() {
-        // Инициализируем историю цен для всех валют
-        this.currentCurrencies.forEach(currency => {
+        // Инициализируем историю цен
+        this.currencies.forEach(currency => {
             currency.history = [];
-            for (let i = 0; i < 100; i++) {
+            for (let i = 0; i < 50; i++) {
                 currency.history.push(currency.price);
             }
         });
-
-        // Создаем график в фиксированной позиции
+        
         this.chart = this.add.graphics();
         this.updateChart();
     }
 
     createUI() {
-        const uiContainer = document.createElement('div');
-        uiContainer.className = 'ui-overlay';
+        const centerX = this.cameras.main.centerX;
         
-        // Верхняя панель
-        const topPanel = document.createElement('div');
-        topPanel.className = 'top-panel';
-        topPanel.innerHTML = `
-            <div class="currency-selector">
-                <button class="btn-currency" id="prevCurrency">←</button>
-                <div class="currency-name" id="currencyName">${this.currentCurrency.name}</div>
-                <button class="btn-currency" id="nextCurrency">→</button>
-            </div>
-            
-            <div class="balance-stats">
-                <div class="balance-section">
-                    <div class="balance-amount">$${this.balance.toFixed(2)}</div>
-                    <div class="balance-change" id="balanceChange"></div>
-                </div>
-                
-                <div class="stats-section">
-                    <div class="stat-item">
-                        Сделки
-                        <span class="stat-value" id="totalTrades">0</span>
-                    </div>
-                    <div class="stat-item">
-                        Успешные
-                        <span class="stat-value" id="successfulTrades">0</span>
-                    </div>
-                    <div class="stat-item">
-                        Прибыль
-                        <span class="stat-value" id="totalProfit">0</span>
-                    </div>
-                    <div class="stat-item">
-                        Монет
-                        <span class="stat-value" id="coinsCount">0</span>
-                    </div>
-                </div>
-            </div>
-        `;
-        uiContainer.appendChild(topPanel);
+        // Верхняя панель - название валюты
+        this.currencyText = this.add.text(centerX, 20, this.currentCurrency.name, {
+            fontSize: '24px',
+            fill: '#2c3e50',
+            fontFamily: 'Arial',
+            fontWeight: 'bold'
+        }).setOrigin(0.5);
 
-        // Область графика (просто div для позиционирования)
-        const chartArea = document.createElement('div');
-        chartArea.className = 'chart-area';
-        chartArea.id = 'chart-area';
-        uiContainer.appendChild(chartArea);
+        // Кнопки переключения валют
+        this.prevButton = this.add.text(50, 20, '←', {
+            fontSize: '24px',
+            fill: '#3498db',
+            fontFamily: 'Arial',
+            fontWeight: 'bold'
+        }).setInteractive();
 
-        // Нижняя панель
-        const bottomPanel = document.createElement('div');
-        bottomPanel.className = 'bottom-panel';
-        bottomPanel.innerHTML = `
-            <div class="controls">
-                <button class="btn btn-buy" id="buyBtn">КУПИТЬ</button>
-                <button class="btn btn-sell" id="sellBtn" disabled>ПРОДАТЬ</button>
-            </div>
-            <button class="leaderboard-btn" id="leaderboardBtn">🏆 ТАБЛИЦА ЛИДЕРОВ</button>
-        `;
-        uiContainer.appendChild(bottomPanel);
+        this.nextButton = this.add.text(350, 20, '→', {
+            fontSize: '24px',
+            fill: '#3498db',
+            fontFamily: 'Arial',
+            fontWeight: 'bold'
+        }).setInteractive();
 
-        document.body.appendChild(uiContainer);
+        // Баланс
+        this.balanceText = this.add.text(centerX, 60, `Баланс: $${this.balance.toFixed(2)}`, {
+            fontSize: '20px',
+            fill: '#2c3e50',
+            fontFamily: 'Arial'
+        }).setOrigin(0.5);
 
-        // Назначаем обработчики
-        this.setupEventListeners();
-        this.updateStatsUI();
+        // Прибыль/убыток
+        this.profitText = this.add.text(centerX, 85, '', {
+            fontSize: '16px',
+            fill: '#27ae60',
+            fontFamily: 'Arial'
+        }).setOrigin(0.5);
+
+        // Статистика
+        this.statsText = this.add.text(centerX, 110, this.getStatsString(), {
+            fontSize: '14px',
+            fill: '#666',
+            fontFamily: 'Arial'
+        }).setOrigin(0.5);
+
+        // Кнопка покупки
+        this.buyButton = this.add.rectangle(centerX - 80, 500, 140, 50, 0x27ae60)
+            .setInteractive();
+        this.add.text(centerX - 80, 500, 'КУПИТЬ', {
+            fontSize: '18px',
+            fill: '#FFFFFF',
+            fontFamily: 'Arial',
+            fontWeight: 'bold'
+        }).setOrigin(0.5);
+
+        // Кнопка продажи
+        this.sellButton = this.add.rectangle(centerX + 80, 500, 140, 50, 0xe74c3c)
+            .setInteractive();
+        this.add.text(centerX + 80, 500, 'ПРОДАТЬ', {
+            fontSize: '18px',
+            fill: '#FFFFFF',
+            fontFamily: 'Arial',
+            fontWeight: 'bold'
+        }).setOrigin(0.5);
+
+        // Кнопка таблицы лидеров
+        this.leaderboardButton = this.add.rectangle(centerX, 560, 300, 40, 0x3498db)
+            .setInteractive();
+        this.add.text(centerX, 560, '🏆 ТАБЛИЦА ЛИДЕРОВ', {
+            fontSize: '16px',
+            fill: '#FFFFFF',
+            fontFamily: 'Arial'
+        }).setOrigin(0.5);
+
+        this.updateButtonStates();
     }
 
     setupEventListeners() {
-        this.buyBtn = document.getElementById('buyBtn');
-        this.sellBtn = document.getElementById('sellBtn');
-        this.balanceChange = document.getElementById('balanceChange');
-        this.currencyName = document.getElementById('currencyName');
-        this.prevCurrencyBtn = document.getElementById('prevCurrency');
-        this.nextCurrencyBtn = document.getElementById('nextCurrency');
-        this.totalTradesEl = document.getElementById('totalTrades');
-        this.successfulTradesEl = document.getElementById('successfulTrades');
-        this.totalProfitEl = document.getElementById('totalProfit');
-        this.coinsCountEl = document.getElementById('coinsCount');
-        this.leaderboardBtn = document.getElementById('leaderboardBtn');
+        // Переключение валют
+        this.prevButton.on('pointerdown', () => this.switchCurrency(-1));
+        this.nextButton.on('pointerdown', () => this.switchCurrency(1));
 
-        this.buyBtn.onclick = () => this.buyCoin();
-        this.sellBtn.onclick = () => this.sellCoin();
-        this.prevCurrencyBtn.onclick = () => this.switchCurrency(-1);
-        this.nextCurrencyBtn.onclick = () => this.switchCurrency(1);
-        this.leaderboardBtn.onclick = () => this.showLeaderboard();
+        // Кнопки покупки/продажи
+        this.buyButton.on('pointerdown', () => this.buyCoin());
+        this.sellButton.on('pointerdown', () => this.sellCoin());
+
+        // Таблица лидеров
+        this.leaderboardButton.on('pointerdown', () => this.showLeaderboard());
     }
 
     switchCurrency(direction) {
@@ -162,32 +158,24 @@ class GameScene extends Phaser.Scene {
         
         this.currentCurrencyIndex += direction;
         if (this.currentCurrencyIndex < 0) {
-            this.currentCurrencyIndex = this.currentCurrencies.length - 1;
-        } else if (this.currentCurrencyIndex >= this.currentCurrencies.length) {
+            this.currentCurrencyIndex = this.currencies.length - 1;
+        } else if (this.currentCurrencyIndex >= this.currencies.length) {
             this.currentCurrencyIndex = 0;
         }
         
-        this.currencyName.textContent = this.currentCurrency.name;
+        this.currencyText.setText(this.currentCurrency.name);
         this.updateChart();
         this.updateUI();
     }
 
     updatePrice() {
         const currency = this.currentCurrency;
-        
-        const volatility = {
-            'VKoin': 1.5,
-            'Memecoin': 3.0,
-            'Social Token': 0.8
-        }[currency.name];
-        
-        const changePercent = (Math.random() - 0.5) * volatility;
+        const changePercent = (Math.random() - 0.5) * currency.volatility;
         currency.price *= (1 + changePercent / 100);
-        
         currency.price = Math.max(currency.price, 1);
         
         currency.history.push(currency.price);
-        if (currency.history.length > 100) {
+        if (currency.history.length > 50) {
             currency.history.shift();
         }
         
@@ -198,24 +186,21 @@ class GameScene extends Phaser.Scene {
     updateChart() {
         this.chart.clear();
         
-        const history = this.priceHistory;
-        const width = this.chartWidth;
-        const height = this.chartHeight;
+        const history = this.currentCurrency.history;
+        const width = 380;
+        const height = 250;
+        const startY = 150;
         
         const minPrice = Math.min(...history);
         const maxPrice = Math.max(...history);
         const range = maxPrice - minPrice || 1;
-        
-        // Рисуем фон графика
-        this.chart.fillStyle(0xf8f9fa);
-        this.chart.fillRect(10, 120, width, height);
         
         // Рисуем линию графика
         this.chart.lineStyle(3, this.currentCurrency.color, 1);
         
         history.forEach((price, index) => {
             const x = 10 + (index / (history.length - 1)) * width;
-            const y = 120 + height - ((price - minPrice) / range) * height;
+            const y = startY + height - ((price - minPrice) / range) * height;
             
             if (index === 0) {
                 this.chart.moveTo(x, y);
@@ -228,43 +213,41 @@ class GameScene extends Phaser.Scene {
     }
 
     updateUI() {
-        if (this.balanceChange) {
-            document.querySelector('.balance-amount').textContent = `$${this.balance.toFixed(2)}`;
-            this.coinsCountEl.textContent = this.ownedCoins;
+        this.balanceText.setText(`Баланс: $${this.balance.toFixed(2)}`);
+        this.statsText.setText(this.getStatsString());
+        
+        if (this.isHolding) {
+            const profit = (this.currentCurrency.price - this.buyPrice) * this.ownedCoins;
+            const profitPercent = ((this.currentCurrency.price - this.buyPrice) / this.buyPrice) * 100;
             
-            if (this.isHolding) {
-                const profit = (this.currentPrice - this.buyPrice) * this.ownedCoins;
-                const profitPercent = ((this.currentPrice - this.buyPrice) / this.buyPrice) * 100;
-                
-                this.balanceChange.textContent = `${profit >= 0 ? '+' : ''}${profit.toFixed(2)} (${profitPercent.toFixed(2)}%)`;
-                this.balanceChange.className = `balance-change ${profit >= 0 ? 'profit' : 'loss'}`;
-            } else {
-                this.balanceChange.textContent = '';
-            }
+            this.profitText.setText(`${profit >= 0 ? '+' : ''}${profit.toFixed(2)} (${profitPercent.toFixed(2)}%)`);
+            this.profitText.setFill(profit >= 0 ? '#27ae60' : '#e74c3c');
+        } else {
+            this.profitText.setText('');
         }
+        
+        this.updateButtonStates();
     }
 
-    updateStatsUI() {
-        if (this.totalTradesEl) {
-            this.totalTradesEl.textContent = this.stats.totalTrades;
-            this.successfulTradesEl.textContent = this.stats.successfulTrades;
-            this.totalProfitEl.textContent = this.stats.totalProfit.toFixed(2);
-            this.coinsCountEl.textContent = this.ownedCoins;
-        }
+    updateButtonStates() {
+        // Визуальное отключение кнопок
+        this.buyButton.setAlpha(this.isHolding ? 0.5 : 1);
+        this.sellButton.setAlpha(this.isHolding ? 1 : 0.5);
+    }
+
+    getStatsString() {
+        return `Сделки: ${this.stats.totalTrades} | Успешные: ${this.stats.successfulTrades} | Прибыль: $${this.stats.totalProfit.toFixed(2)} | Монет: ${this.ownedCoins}`;
     }
 
     buyCoin() {
         if (this.isHolding) return;
         
-        const coinsToBuy = Math.floor(this.balance / this.currentPrice);
+        const coinsToBuy = Math.floor(this.balance / this.currentCurrency.price);
         if (coinsToBuy > 0) {
             this.ownedCoins = coinsToBuy;
-            this.buyPrice = this.currentPrice;
-            this.balance -= coinsToBuy * this.currentPrice;
+            this.buyPrice = this.currentCurrency.price;
+            this.balance -= coinsToBuy * this.currentCurrency.price;
             this.isHolding = true;
-            
-            this.buyBtn.disabled = true;
-            this.sellBtn.disabled = false;
             
             this.updateUI();
             this.saveGameData();
@@ -274,7 +257,7 @@ class GameScene extends Phaser.Scene {
     sellCoin() {
         if (!this.isHolding) return;
         
-        const profit = (this.currentPrice - this.buyPrice) * this.ownedCoins;
+        const profit = (this.currentCurrency.price - this.buyPrice) * this.ownedCoins;
         
         this.stats.totalTrades++;
         if (profit > 0) {
@@ -282,14 +265,10 @@ class GameScene extends Phaser.Scene {
         }
         this.stats.totalProfit += profit;
         
-        this.balance += this.ownedCoins * this.currentPrice;
+        this.balance += this.ownedCoins * this.currentCurrency.price;
         this.ownedCoins = 0;
         this.isHolding = false;
         
-        this.buyBtn.disabled = false;
-        this.sellBtn.disabled = true;
-        
-        this.updateStatsUI();
         this.updateUI();
         this.saveGameData();
     }
@@ -298,20 +277,11 @@ class GameScene extends Phaser.Scene {
         try {
             if (window.VK) {
                 const data = await VK.call('storage.get', { 
-                    keys: ['balance', 'ownedCoins', 'stats', 'currencies'] 
+                    keys: ['balance', 'ownedCoins', 'stats'] 
                 });
                 if (data.balance) this.balance = parseFloat(data.balance);
                 if (data.ownedCoins) this.ownedCoins = parseInt(data.ownedCoins);
                 if (data.stats) this.stats = JSON.parse(data.stats);
-                if (data.currencies) {
-                    const saved = JSON.parse(data.currencies);
-                    this.currentCurrencies.forEach((currency, index) => {
-                        if (saved[index]) {
-                            currency.price = saved[index].price;
-                            currency.history = saved[index].history || [currency.price];
-                        }
-                    });
-                }
                 this.isHolding = this.ownedCoins > 0;
             }
         } catch (error) {
@@ -325,8 +295,7 @@ class GameScene extends Phaser.Scene {
                 await VK.call('storage.set', {
                     balance: this.balance.toString(),
                     ownedCoins: this.ownedCoins.toString(),
-                    stats: JSON.stringify(this.stats),
-                    currencies: JSON.stringify(this.currentCurrencies)
+                    stats: JSON.stringify(this.stats)
                 });
             }
         } catch (error) {
@@ -349,9 +318,9 @@ class GameScene extends Phaser.Scene {
 
 const config = {
     type: Phaser.AUTO,
-    parent: 'game-container',
     width: 400,
     height: 600,
+    parent: 'game-container',
     backgroundColor: '#f8f9fa',
     scene: GameScene
 };
