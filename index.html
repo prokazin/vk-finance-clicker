@@ -1,134 +1,79 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Finance Clicker — Full Exchange (BTC / TON / RUB)</title>
-  <link rel="stylesheet" href="style.css" />
-  <script src="https://unpkg.com/lightweight-charts@4.4.0/dist/lightweight-charts.standalone.production.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Finance Exchange Clicker</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Lightweight Charts -->
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
 </head>
+
 <body>
-  <div class="app">
-    <header>
-      <h1>Finance Clicker — Exchange</h1>
-      <div class="top-right">
-        <div>Рубли: <b id="rub">1000</b> ₽</div>
-        <div>USDT: <b id="usdt">0.00</b></div>
-        <div>BTC: <b id="btcBal">0.000000</b></div>
-        <div>TON: <b id="tonBal">0.000000</b></div>
-      </div>
-    </header>
 
-    <main>
-      <aside class="left">
-        <section class="card clicker">
-          <h2>Кликер — мгновенные трейды</h2>
-          <div class="row">
-            <input id="clickStake" type="number" value="50" min="1" />
-            <select id="clickType">
-              <option value="safe">Безопасный</option>
-              <option value="normal" selected>Стандарт</option>
-              <option value="risk">Риск</option>
-            </select>
-          </div>
-          <button id="clickBtn" class="primary">Сделать трейд (клик)</button>
-          <div id="clickRes" class="muted">—</div>
-        </section>
+<header class="top">
+    <div class="balance">
+        <p>RUB: <span id="rubBalance">0</span> ₽</p>
+        <p>USD: <span id="usdBalance">0</span> $</p>
+        <p>BTC: <span id="btcBalance">0</span> ₿</p>
+    </div>
+    <button id="clickBtn" class="click-btn">+1 ₽</button>
+</header>
 
-        <section class="card wallet">
-          <h3>Обмен/RUB↔USDT</h3>
-          <div class="row">
-            <input id="convAmount" type="number" value="100" min="1" />
-            <button id="rubToUsd">₽ → $</button>
-            <button id="usdToRub">$ → ₽</button>
-          </div>
-          <div class="row small"><span id="fxRate">Курс: — ₽ / $</span></div>
-        </section>
+<div class="tabs">
+    <button class="tab active" data-tab="market">Market</button>
+    <button class="tab" data-tab="trade">Trade</button>
+    <button class="tab" data-tab="earn">Earn</button>
+    <button class="tab" data-tab="wallet">Wallet</button>
+</div>
 
-        <section class="card deposit">
-          <h3>Вклады (депозит)</h3>
-          <div class="row">
-            <input id="depAmount" type="number" value="10" min="1" />
-            <button id="openDep">Открыть вклад ($)</button>
-          </div>
-          <div id="depInfo" class="muted">Вкладов: 0</div>
-        </section>
 
-        <section class="card orders">
-          <h3>Ордеры (BTC, TON)</h3>
-          <div class="row">
-            <select id="tradePair">
-              <option value="BTCUSDT">BTC/USDT</option>
-              <option value="TONUSDT">TON/USDT</option>
-            </select>
-            <input id="orderAmount" type="number" placeholder="USDT" value="10" />
-          </div>
-          <div class="row">
-            <select id="orderType">
-              <option value="market">Market</option>
-              <option value="limit">Limit</option>
-            </select>
-            <input id="orderPrice" type="number" placeholder="Price (limit)" step="0.0001" />
-          </div>
-          <div class="row">
-            <button id="buyBtn" class="primary">Купить</button>
-            <button id="sellBtn" class="danger">Продать</button>
-          </div>
-          <div id="openOrders" class="muted small">Ордера: 0</div>
-        </section>
-      </aside>
+<!-- MARKET -->
+<div class="tab-content active" id="market">
 
-      <section class="center">
-        <div class="card chart">
-          <div id="chartToolbar">
-            <select id="pairSelect">
-              <option value="BTCUSDT" selected>BTC/USDT</option>
-              <option value="TONUSDT">TON/USDT</option>
-              <option value="RUBUSD">RUB/USDT (вирт)</option>
-            </select>
-            <select id="tfSelect">
-              <option value="1m">1m</option>
-              <option value="5m">5m</option>
-              <option value="15m">15m</option>
-            </select>
-            <span id="marketStatus" class="muted">Market: connecting...</span>
-          </div>
-          <div id="chartContainer"></div>
-        </div>
+    <select id="assetSelect" class="asset-select">
+        <option value="BTC">BTC/USDT</option>
+        <option value="TON">TON/USDT</option>
+        <option value="RUB">USD/RUB</option>
+    </select>
 
-        <div class="card trades">
-          <h3>Позиции & История</h3>
-          <div id="positionsList"></div>
-          <h4>История</h4>
-          <ul id="historyList"></ul>
-        </div>
-      </section>
+    <div id="chart" class="chart"></div>
 
-      <aside class="right">
-        <section class="card leaderboard">
-          <h3>Лидерборд (локально)</h3>
-          <ol id="leaderboard"></ol>
-        </section>
+    <p class="net-status">Status: <span id="netStatus">Online</span></p>
+</div>
 
-        <section class="card stats">
-          <h3>Статистика</h3>
-          <div>Баланс (в ₽): <b id="totalRub">—</b></div>
-          <div>PNL (в $): <b id="totalPnl">$0.00</b></div>
-        </section>
 
-        <section class="card open-orders">
-          <h3>Открытые ордера</h3>
-          <div id="ordersList"></div>
-        </section>
-      </aside>
-    </main>
+<!-- TRADE -->
+<div class="tab-content" id="trade">
+    <h2>Trade</h2>
+    <input type="number" id="tradeAmount" placeholder="Amount USDT">
+    <button id="buyBtn" class="buy">Buy</button>
+    <button id="sellBtn" class="sell">Sell</button>
 
-    <footer>
-      <small>Демо. Данные крипто через Binance WebSocket (публичный), курс RUB↔USD через exchangerate.host. Для продакшена — сервер и защита.</small>
-    </footer>
-  </div>
+    <h3>Open Positions</h3>
+    <div id="positions"></div>
+</div>
 
-  <script src="market.js"></script>
-  <script src="script.js"></script>
+
+<!-- EARN -->
+<div class="tab-content" id="earn">
+    <h2>Deposit</h2>
+    <p>2% every 10 sec</p>
+    <input type="number" id="depAmount" placeholder="Amount RUB">
+    <button id="depBtn">Open Deposit</button>
+    <div id="depositList"></div>
+</div>
+
+
+<!-- WALLET -->
+<div class="tab-content" id="wallet">
+    <h2>Converter</h2>
+    <button id="rubToUsd">RUB → USD</button>
+    <button id="usdToRub">USD → RUB</button>
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>
