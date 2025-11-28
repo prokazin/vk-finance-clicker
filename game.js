@@ -247,9 +247,9 @@ class GameScene extends Phaser.Scene {
 
         this.layout = {
             padding: 20,
-            headerHeight: 120,
-            chartHeight: 280,
-            buttonHeight: 180
+            headerHeight: 0,
+            chartHeight: 0,
+            buttonHeight: 0
         };
     }
 
@@ -297,23 +297,13 @@ class GameScene extends Phaser.Scene {
     calculateLayout() {
         const { width, height } = this.cameras.main;
         
-        // Адаптивные размеры для разных экранов
-        if (height < 600) {
-            // Маленькие экраны
-            this.layout.headerHeight = 100;
-            this.layout.chartHeight = 220;
-            this.layout.buttonHeight = 150;
-        } else if (height > 700) {
-            // Большие экраны
-            this.layout.headerHeight = 140;
-            this.layout.chartHeight = 320;
-            this.layout.buttonHeight = 200;
-        } else {
-            // Стандартные экраны
-            this.layout.headerHeight = 120;
-            this.layout.chartHeight = 280;
-            this.layout.buttonHeight = 180;
-        }
+        // Адаптивные размеры для полноэкранного режима
+        this.layout.padding = Math.min(width * 0.05, 25);
+        
+        // Распределяем пространство: 25% заголовок, 50% график, 25% кнопки
+        this.layout.headerHeight = height * 0.25;
+        this.layout.chartHeight = height * 0.50;
+        this.layout.buttonHeight = height * 0.25;
     }
 
     createChart() {
@@ -332,90 +322,95 @@ class GameScene extends Phaser.Scene {
         const buttonY = this.layout.headerHeight + this.layout.chartHeight + this.layout.buttonHeight / 2;
 
         // Верхняя панель - валюта и баланс
-        this.currencyText = this.add.text(centerX, headerY - 30, this.currentCurrency.name, {
-            fontSize: '24px',
+        this.currencyText = this.add.text(centerX, headerY - 25, this.currentCurrency.name, {
+            fontSize: this.getAdaptiveFontSize(24),
             fill: '#2c3e50',
             fontFamily: 'Arial',
             fontWeight: 'bold'
         }).setOrigin(0.5);
 
-        this.balanceText = this.add.text(centerX, headerY - 5, `Баланс: $${this.balance.toFixed(2)}`, {
-            fontSize: '20px',
+        this.balanceText = this.add.text(centerX, headerY, `Баланс: $${this.balance.toFixed(2)}`, {
+            fontSize: this.getAdaptiveFontSize(20),
             fill: '#2c3e50',
             fontFamily: 'Arial'
         }).setOrigin(0.5);
 
         // Кнопки переключения валют
-        this.prevButton = this.add.text(this.layout.padding + 20, headerY - 15, '←', {
-            fontSize: '24px',
+        const buttonSize = this.getAdaptiveSize(35);
+        this.prevButton = this.add.text(this.layout.padding + 25, headerY - 10, '←', {
+            fontSize: this.getAdaptiveFontSize(24),
             fill: '#3498db',
             fontFamily: 'Arial',
             fontWeight: 'bold'
         }).setInteractive();
 
-        this.nextButton = this.add.text(width - this.layout.padding - 20, headerY - 15, '→', {
-            fontSize: '24px',
+        this.nextButton = this.add.text(width - this.layout.padding - 25, headerY - 10, '→', {
+            fontSize: this.getAdaptiveFontSize(24),
             fill: '#3498db',
             fontFamily: 'Arial',
             fontWeight: 'bold'
         }).setInteractive();
 
         // Статистика
-        this.statsText = this.add.text(centerX, headerY + 20, this.getStatsString(), {
-            fontSize: '14px',
+        this.statsText = this.add.text(centerX, headerY + 25, this.getStatsString(), {
+            fontSize: this.getAdaptiveFontSize(14),
             fill: '#666',
             fontFamily: 'Arial'
         }).setOrigin(0.5);
 
         // Прибыль/убыток
-        this.profitText = this.add.text(centerX, headerY + 40, '', {
-            fontSize: '16px',
+        this.profitText = this.add.text(centerX, headerY + 45, '', {
+            fontSize: this.getAdaptiveFontSize(16),
             fill: '#27ae60',
             fontFamily: 'Arial'
         }).setOrigin(0.5);
 
         // Панель события
-        this.eventPanel = this.add.rectangle(centerX, headerY + 65, width - this.layout.padding * 2, 30, 0x2c3e50, 0)
+        this.eventPanel = this.add.rectangle(centerX, headerY + 70, width - this.layout.padding * 2, 35, 0x2c3e50, 0)
             .setVisible(false);
-        this.eventText = this.add.text(centerX, headerY + 65, '', {
-            fontSize: '13px',
+        this.eventText = this.add.text(centerX, headerY + 70, '', {
+            fontSize: this.getAdaptiveFontSize(13),
             fill: '#ffffff',
             fontFamily: 'Arial',
             fontWeight: 'bold'
         }).setOrigin(0.5).setVisible(false);
 
         // Кнопка покупки
-        this.buyButton = this.add.rectangle(centerX - 80, buttonY - 40, 140, 50, 0x27ae60)
+        const buttonWidth = this.getAdaptiveSize(140);
+        const buttonHeight = this.getAdaptiveSize(50);
+        this.buyButton = this.add.rectangle(centerX - buttonWidth/1.8, buttonY - 20, buttonWidth, buttonHeight, 0x27ae60)
             .setInteractive();
-        this.add.text(centerX - 80, buttonY - 40, 'КУПИТЬ', {
-            fontSize: '18px',
+        this.add.text(centerX - buttonWidth/1.8, buttonY - 20, 'КУПИТЬ', {
+            fontSize: this.getAdaptiveFontSize(18),
             fill: '#FFFFFF',
             fontFamily: 'Arial',
             fontWeight: 'bold'
         }).setOrigin(0.5);
 
         // Кнопка продажи
-        this.sellButton = this.add.rectangle(centerX + 80, buttonY - 40, 140, 50, 0xe74c3c)
+        this.sellButton = this.add.rectangle(centerX + buttonWidth/1.8, buttonY - 20, buttonWidth, buttonHeight, 0xe74c3c)
             .setInteractive();
-        this.add.text(centerX + 80, buttonY - 40, 'ПРОДАТЬ', {
-            fontSize: '18px',
+        this.add.text(centerX + buttonWidth/1.8, buttonY - 20, 'ПРОДАТЬ', {
+            fontSize: this.getAdaptiveFontSize(18),
             fill: '#FFFFFF',
             fontFamily: 'Arial',
             fontWeight: 'bold'
         }).setOrigin(0.5);
 
         // Кнопка стоп-ордеров
-        this.stopButton = this.add.rectangle(centerX, buttonY + 10, 200, 40, 0xf39c12)
+        const stopButtonWidth = this.getAdaptiveSize(200);
+        const stopButtonHeight = this.getAdaptiveSize(40);
+        this.stopButton = this.add.rectangle(centerX, buttonY + 20, stopButtonWidth, stopButtonHeight, 0xf39c12)
             .setInteractive();
-        this.add.text(centerX, buttonY + 10, 'СТОП-ОРДЕР', {
-            fontSize: '16px',
+        this.add.text(centerX, buttonY + 20, 'СТОП-ОРДЕР', {
+            fontSize: this.getAdaptiveFontSize(16),
             fill: '#FFFFFF',
             fontFamily: 'Arial'
         }).setOrigin(0.5);
 
         // Информация о стоп-ордерах
-        this.stopInfo = this.add.text(centerX, buttonY - 10, '', {
-            fontSize: '12px',
+        this.stopInfo = this.add.text(centerX, buttonY - 5, '', {
+            fontSize: this.getAdaptiveFontSize(12),
             fill: '#e67e22',
             fontFamily: 'Arial',
             backgroundColor: '#fef9e7',
@@ -424,6 +419,22 @@ class GameScene extends Phaser.Scene {
 
         this.updateButtonStates();
         this.updateStopInfo();
+    }
+
+    getAdaptiveFontSize(baseSize) {
+        const { height } = this.cameras.main;
+        // Базовая адаптация для разных размеров экрана
+        if (height < 600) return baseSize * 0.8 + 'px';
+        if (height > 800) return baseSize * 1.2 + 'px';
+        return baseSize + 'px';
+    }
+
+    getAdaptiveSize(baseSize) {
+        const { height } = this.cameras.main;
+        // Адаптация размеров элементов
+        if (height < 600) return baseSize * 0.8;
+        if (height > 800) return baseSize * 1.2;
+        return baseSize;
     }
 
     setupEventListeners() {
@@ -588,7 +599,7 @@ class GameScene extends Phaser.Scene {
             
             // Подпись стоп-лосса
             this.add.text(this.layout.padding + 10, stopY - 10, `SL: $${this.stopLoss.toFixed(2)}`, { 
-                fontSize: '10px', 
+                fontSize: this.getAdaptiveFontSize(10),
                 fill: '#ffffff',
                 fontFamily: 'Arial',
                 fontWeight: 'bold'
@@ -609,7 +620,7 @@ class GameScene extends Phaser.Scene {
             
             // Подпись тейк-профита
             this.add.text(this.layout.padding + 10, profitY - 10, `TP: $${this.takeProfit.toFixed(2)}`, { 
-                fontSize: '10px', 
+                fontSize: this.getAdaptiveFontSize(10),
                 fill: '#ffffff',
                 fontFamily: 'Arial',
                 fontWeight: 'bold'
@@ -642,7 +653,7 @@ class GameScene extends Phaser.Scene {
             this.ordersGraphics.fillRect(this.layout.padding + width + 10, buyY - 10, 75, 16);
             
             this.add.text(this.layout.padding + width + 13, buyY - 8, `BUY: $${this.buyPrice.toFixed(2)}`, { 
-                fontSize: '9px', 
+                fontSize: this.getAdaptiveFontSize(9),
                 fill: '#ffffff',
                 fontFamily: 'Arial',
                 fontWeight: 'bold'
@@ -770,7 +781,7 @@ class GameScene extends Phaser.Scene {
         const messageY = this.layout.headerHeight + this.layout.chartHeight / 2;
         
         const message = this.add.text(centerX, messageY, text, {
-            fontSize: '16px',
+            fontSize: this.getAdaptiveFontSize(16),
             fill: '#f39c12',
             fontFamily: 'Arial',
             backgroundColor: '#ffffff',
@@ -817,7 +828,7 @@ class GameScene extends Phaser.Scene {
     }
 }
 
-// Конфигурация Phaser с адаптивными размерами
+// Конфигурация Phaser с полноэкранным режимом
 const config = {
     type: Phaser.AUTO,
     width: window.innerWidth,
@@ -828,6 +839,10 @@ const config = {
     scale: {
         mode: Phaser.Scale.RESIZE,
         autoCenter: Phaser.Scale.CENTER_BOTH
+    },
+    render: {
+        antialias: true,
+        roundPixels: true
     }
 };
 
@@ -835,10 +850,24 @@ const config = {
 window.addEventListener('DOMContentLoaded', function() {
     console.log('DOM загружен, запускаем игру...');
     
+    // Адаптация под мобильные устройства
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').then(() => {
+            console.log('Service Worker зарегистрирован');
+        });
+    }
+    
+    // Запуск в полноэкранном режиме
     setTimeout(() => {
         try {
             const game = new Phaser.Game(config);
-            console.log('Phaser игра создана успешно');
+            console.log('Phaser игра создана успешно в полноэкранном режиме');
+            
+            // Обработка изменения размера окна
+            window.addEventListener('resize', () => {
+                game.scale.refresh();
+            });
+            
         } catch (error) {
             console.error('Ошибка при создании игры:', error);
         }
