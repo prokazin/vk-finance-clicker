@@ -25,43 +25,219 @@ class GameScene extends Phaser.Scene {
             totalProfit: 0
         };
 
-        // Система новостей и событий
+        // Система новостей и событий - 25 событий
         this.eventsSystem = {
             news: [
+                // БЫЧЬИ СОБЫТИЯ (положительные)
                 {
                     id: 1,
-                    title: "📈 Бычий рынок!",
-                    description: "Инвесторы активно покупают",
-                    effect: { multiplier: 1.5, duration: 10000 },
-                    color: 0x27ae60
+                    title: "🚀 Космический рост!",
+                    description: "Институциональные инвесторы входят в рынок",
+                    effect: { multiplier: 2.2, duration: 15000 },
+                    color: 0x27ae60,
+                    icon: "🚀"
                 },
                 {
                     id: 2,
-                    title: "📉 Медвежий тренд!",
-                    description: "Продажи на всех рынках",
-                    effect: { multiplier: 0.6, duration: 8000 },
-                    color: 0xe74c3c
+                    title: "📈 Бычий прорыв!",
+                    description: "Цены обновляют годовые максимумы",
+                    effect: { multiplier: 1.8, duration: 12000 },
+                    color: 0x2ecc71,
+                    icon: "📈"
                 },
                 {
                     id: 3,
-                    title: "⚡ Волатильность!",
-                    description: "Резкие скачки цен",
-                    effect: { multiplier: 2.0, duration: 6000 },
-                    color: 0xf39c12
+                    title: "💎 Алмазные руки!",
+                    description: "Ходлеры не продают несмотря на рост",
+                    effect: { multiplier: 1.5, duration: 10000 },
+                    color: 0x1abc9c,
+                    icon: "💎"
                 },
                 {
                     id: 4,
-                    title: "🛡️ Стабильность!",
-                    description: "Рынок успокаивается",
-                    effect: { multiplier: 0.3, duration: 12000 },
-                    color: 0x3498db
+                    title: "🎯 Технологический прорыв!",
+                    description: "Запуск нового блокчейн-протокола",
+                    effect: { multiplier: 2.0, duration: 13000 },
+                    color: 0x3498db,
+                    icon: "🎯"
                 },
                 {
                     id: 5,
-                    title: "🎯 Технологический прорыв!",
-                    description: "Новые технологии в блокчейне",
-                    effect: { multiplier: 1.8, duration: 7000 },
-                    color: 0x9b59b6
+                    title: "💰 Крупная инвестиция!",
+                    description: "Венчурный фонд вложил $50M в проект",
+                    effect: { multiplier: 1.7, duration: 11000 },
+                    color: 0xf1c40f,
+                    icon: "💰"
+                },
+
+                // МЕДВЕЖЬИ СОБЫТИЯ (отрицательные)
+                {
+                    id: 6,
+                    title: "📉 Обвал рынка!",
+                    description: "Паника на глобальных биржах",
+                    effect: { multiplier: 0.4, duration: 14000 },
+                    color: 0xe74c3c,
+                    icon: "📉"
+                },
+                {
+                    id: 7,
+                    title: "🐻 Медвежья ловушка!",
+                    description: "Крупные игроки открывают шорты",
+                    effect: { multiplier: 0.6, duration: 12000 },
+                    color: 0xc0392b,
+                    icon: "🐻"
+                },
+                {
+                    id: 8,
+                    title: "💸 Массовые продажи!",
+                    description: "Розничные инвесторы фиксируют прибыль",
+                    effect: { multiplier: 0.5, duration: 10000 },
+                    color: 0xd35400,
+                    icon: "💸"
+                },
+                {
+                    id: 9,
+                    title: "⚡ Флэш-крэш!",
+                    description: "Мгновенное падение на 15% за минуту",
+                    effect: { multiplier: 0.3, duration: 8000 },
+                    color: 0xff6b6b,
+                    icon: "⚡"
+                },
+                {
+                    id: 10,
+                    title: "🛑 Регуляторные риски!",
+                    description: "ЦБ рассматривает новые ограничения",
+                    effect: { multiplier: 0.7, duration: 16000 },
+                    color: 0xff4757,
+                    icon: "🛑"
+                },
+
+                // ВОЛАТИЛЬНОСТЬ
+                {
+                    id: 11,
+                    title: "🎭 Высокая волатильность!",
+                    description: "Резкие скачки цен в обе стороны",
+                    effect: { multiplier: 2.5, duration: 9000 },
+                    color: 0xf39c12,
+                    icon: "🎭"
+                },
+                {
+                    id: 12,
+                    title: "🌪️ Турбулентность!",
+                    description: "Нестабильность на мировых рынках",
+                    effect: { multiplier: 2.8, duration: 7000 },
+                    color: 0xe67e22,
+                    icon: "🌪️"
+                },
+                {
+                    id: 13,
+                    title: "⚖️ Боковик!",
+                    description: "Цены движутся в узком диапазоне",
+                    effect: { multiplier: 0.8, duration: 18000 },
+                    color: 0x95a5a6,
+                    icon: "⚖️"
+                },
+
+                // ТЕХНОЛОГИЧЕСКИЕ
+                {
+                    id: 14,
+                    title: "🔧 Апгрейд сети!",
+                    description: "Хардфорк улучшил производительность",
+                    effect: { multiplier: 1.6, duration: 14000 },
+                    color: 0x9b59b6,
+                    icon: "🔧"
+                },
+                {
+                    id: 15,
+                    title: "🛡️ Повышение безопасности!",
+                    description: "Внедрена новая система защиты",
+                    effect: { multiplier: 1.4, duration: 12000 },
+                    color: 0x34495e,
+                    icon: "🛡️"
+                },
+                {
+                    id: 16,
+                    title: "🔗 Партнерство!",
+                    description: "Крупная компания интегрирует технологию",
+                    effect: { multiplier: 1.9, duration: 13000 },
+                    color: 0x1abc9c,
+                    icon: "🔗"
+                },
+
+                // МАКРОЭКОНОМИЧЕСКИЕ
+                {
+                    id: 17,
+                    title: "🏦 Процентные ставки!",
+                    description: "ЦБ снижает ключевую ставку",
+                    effect: { multiplier: 1.5, duration: 15000 },
+                    color: 0x27ae60,
+                    icon: "🏦"
+                },
+                {
+                    id: 18,
+                    title: "📊 Инфляция падает!",
+                    description: "Данные лучше ожиданий аналитиков",
+                    effect: { multiplier: 1.3, duration: 12000 },
+                    color: 0x2ecc71,
+                    icon: "📊"
+                },
+                {
+                    id: 19,
+                    title: "🌍 Глобальный рост!",
+                    description: "Мировая экономика показывает восстановление",
+                    effect: { multiplier: 1.4, duration: 14000 },
+                    color: 0x3498db,
+                    icon: "🌍"
+                },
+
+                // НЕОЖИДАННЫЕ
+                {
+                    id: 20,
+                    title: "🎲 Неожиданные новости!",
+                    description: "Слухи о крупной сделке",
+                    effect: { multiplier: 2.0, duration: 8000 },
+                    color: 0xe74c3c,
+                    icon: "🎲"
+                },
+                {
+                    id: 21,
+                    title: "📰 Сенсационное заявление!",
+                    description: "CEO крупной компании высказался о крипто",
+                    effect: { multiplier: 1.7, duration: 10000 },
+                    color: 0xf39c12,
+                    icon: "📰"
+                },
+                {
+                    id: 22,
+                    title: "🔍 Расследование!",
+                    description: "Регуляторы проверяют крупный проект",
+                    effect: { multiplier: 0.6, duration: 16000 },
+                    color: 0x95a5a6,
+                    icon: "🔍"
+                },
+                {
+                    id: 23,
+                    title: "🌟 Листинг на бирже!",
+                    description: "Крупная биржа добавляет новую пару",
+                    effect: { multiplier: 1.8, duration: 12000 },
+                    color: 0xf1c40f,
+                    icon: "🌟"
+                },
+                {
+                    id: 24,
+                    title: "⚡ Сетевые проблемы!",
+                    description: "Временные сбои в работе сети",
+                    effect: { multiplier: 0.5, duration: 9000 },
+                    color: 0xe67e22,
+                    icon: "⚡"
+                },
+                {
+                    id: 25,
+                    title: "🔄 Ребрендинг!",
+                    description: "Проект представляет новое видение",
+                    effect: { multiplier: 1.2, duration: 15000 },
+                    color: 0x9b59b6,
+                    icon: "🔄"
                 }
             ],
             getRandomEvent: function() {
@@ -97,9 +273,9 @@ class GameScene extends Phaser.Scene {
             loop: true
         });
 
-        // Запуск случайных событий каждые 20-30 секунд
+        // Запуск случайных событий каждые 90 секунд (1.5 минуты)
         this.time.addEvent({
-            delay: 20000,
+            delay: 90000,
             callback: this.triggerRandomEvent,
             callbackScope: this,
             loop: true
@@ -110,7 +286,7 @@ class GameScene extends Phaser.Scene {
 
     createChart() {
         this.chart = this.add.graphics();
-        this.ordersGraphics = this.add.graphics(); // Отдельная графика для ордеров
+        this.ordersGraphics = this.add.graphics();
         this.updateChart();
     }
 
@@ -162,7 +338,7 @@ class GameScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         // Панель события (изначально скрыта)
-        this.eventPanel = this.add.rectangle(centerX, 135, 380, 30, 0x2c3e50, 0)
+        this.eventPanel = this.add.rectangle(centerX, 135, 380, 35, 0x2c3e50, 0)
             .setVisible(false);
         this.eventText = this.add.text(centerX, 135, '', {
             fontSize: '14px',
@@ -221,15 +397,15 @@ class GameScene extends Phaser.Scene {
 
     // Система событий и новостей
     triggerRandomEvent() {
-        if (this.activeEvent) return; // Не запускаем новое событие, если текущее активно
+        if (this.activeEvent) return;
         
         const event = this.eventsSystem.getRandomEvent();
         this.activeEvent = event;
         this.eventEndTime = Date.now() + event.effect.duration;
         
-        // Показываем панель события
+        // Показываем панель события с иконкой
         this.eventPanel.setFillStyle(event.color, 0.9).setVisible(true);
-        this.eventText.setText(`${event.title} - ${event.description}`).setVisible(true);
+        this.eventText.setText(`${event.icon} ${event.title} - ${event.description}`).setVisible(true);
         
         // Анимация появления
         this.tweens.add({
@@ -265,7 +441,6 @@ class GameScene extends Phaser.Scene {
     getCurrentVolatility() {
         let baseVolatility = this.currentCurrency.volatility;
         
-        // Учитываем активное событие
         if (this.activeEvent) {
             baseVolatility *= this.activeEvent.effect.multiplier;
         }
@@ -328,7 +503,7 @@ class GameScene extends Phaser.Scene {
         const history = this.currentCurrency.history;
         const width = 380;
         const height = 250;
-        const startY = this.activeEvent ? 170 : 150; // Сдвигаем график если есть событие
+        const startY = this.activeEvent ? 170 : 150;
         
         const minPrice = Math.min(...history);
         const maxPrice = Math.max(...history);
@@ -350,80 +525,109 @@ class GameScene extends Phaser.Scene {
         
         this.chart.strokePath();
         
-        // ВИЗУАЛИЗАЦИЯ ОРДЕРОВ НА ГРАФИКЕ
+        // УЛУЧШЕННАЯ ВИЗУАЛИЗАЦИЯ ОРДЕРОВ
         if (this.isHolding) {
             this.drawOrderLines(minPrice, maxPrice, startY, height, range, width);
             this.drawBuyMarker(startY, height, range, width);
         }
     }
 
-    // Рисуем линии стоп-лосса и тейк-профита
+    // УЛУЧШЕННАЯ ОТРИСОВКА ЛИНИЙ ОРДЕРОВ
     drawOrderLines(minPrice, maxPrice, startY, height, range, width) {
-        // Стоп-лосс (красная пунктирная линия)
+        // Стоп-лосс (красная жирная линия с заливкой)
         if (this.stopLoss > 0 && this.stopLoss >= minPrice && this.stopLoss <= maxPrice) {
             const stopY = startY + height - ((this.stopLoss - minPrice) / range) * height;
             
-            this.ordersGraphics.lineStyle(2, 0xe74c3c, 0.8);
-            this.ordersGraphics.setLineDash([5, 5]);
+            // Основная линия
+            this.ordersGraphics.lineStyle(3, 0xe74c3c, 0.9);
             this.ordersGraphics.lineBetween(10, stopY, width + 10, stopY);
-            this.ordersGraphics.setLineDash([]);
+            
+            // Фон для подписи
+            this.ordersGraphics.fillStyle(0xe74c3c, 0.9);
+            this.ordersGraphics.fillRect(10, stopY - 12, 60, 16);
             
             // Подпись стоп-лосса
-            this.add.text(15, stopY - 8, `SL: $${this.stopLoss.toFixed(2)}`, { 
+            this.add.text(15, stopY - 10, `SL: $${this.stopLoss.toFixed(2)}`, { 
                 fontSize: '10px', 
-                fill: '#e74c3c',
+                fill: '#ffffff',
                 fontFamily: 'Arial',
-                backgroundColor: '#ffffff',
-                padding: { left: 3, right: 3, top: 1, bottom: 1 }
+                fontWeight: 'bold'
             });
         }
         
-        // Тейк-профит (зеленая пунктирная линия)
+        // Тейк-профит (зеленая жирная линия с заливкой)
         if (this.takeProfit > 0 && this.takeProfit >= minPrice && this.takeProfit <= maxPrice) {
             const profitY = startY + height - ((this.takeProfit - minPrice) / range) * height;
             
-            this.ordersGraphics.lineStyle(2, 0x27ae60, 0.8);
-            this.ordersGraphics.setLineDash([5, 5]);
+            // Основная линия
+            this.ordersGraphics.lineStyle(3, 0x27ae60, 0.9);
             this.ordersGraphics.lineBetween(10, profitY, width + 10, profitY);
-            this.ordersGraphics.setLineDash([]);
+            
+            // Фон для подписи
+            this.ordersGraphics.fillStyle(0x27ae60, 0.9);
+            this.ordersGraphics.fillRect(10, profitY - 12, 65, 16);
             
             // Подпись тейк-профита
-            this.add.text(15, profitY - 8, `TP: $${this.takeProfit.toFixed(2)}`, { 
+            this.add.text(15, profitY - 10, `TP: $${this.takeProfit.toFixed(2)}`, { 
                 fontSize: '10px', 
-                fill: '#27ae60',
+                fill: '#ffffff',
                 fontFamily: 'Arial',
-                backgroundColor: '#ffffff',
-                padding: { left: 3, right: 3, top: 1, bottom: 1 }
+                fontWeight: 'bold'
             });
         }
     }
 
-    // Рисуем маркер точки покупки
+    // УЛУЧШЕННЫЙ МАРКЕР ЦЕНЫ ПОКУПКИ
     drawBuyMarker(startY, height, range, width) {
         if (this.buyPrice > 0) {
             const minPrice = Math.min(...this.currentCurrency.history);
             const buyY = startY + height - ((this.buyPrice - minPrice) / range) * height;
-            const currentX = width + 5; // Правая граница графика
             
-            // Вертикальная линия от текущей цены до цены покупки
-            const currentPrice = this.currentCurrency.price;
-            const currentY = startY + height - ((currentPrice - minPrice) / range) * height;
+            // Вертикальная пунктирная линия через весь график
+            this.ordersGraphics.lineStyle(2, 0x3498db, 0.6);
+            this.drawDashedLine(this.ordersGraphics, 10, buyY, width + 10, buyY, 8, 4);
             
-            this.ordersGraphics.lineStyle(1, 0x3498db, 0.6);
-            this.ordersGraphics.lineBetween(currentX, currentY, currentX, buyY);
-            
-            // Маркер цены покупки
+            // Большой маркер цены покупки
             this.ordersGraphics.fillStyle(0x3498db, 1);
-            this.ordersGraphics.fillCircle(currentX, buyY, 4);
+            this.ordersGraphics.fillCircle(width + 8, buyY, 6);
             
-            // Подпись цены покупки
-            this.add.text(currentX + 8, buyY - 6, `BUY: $${this.buyPrice.toFixed(2)}`, { 
+            // Обводка маркера
+            this.ordersGraphics.lineStyle(2, 0xffffff, 1);
+            this.ordersGraphics.strokeCircle(width + 8, buyY, 6);
+            
+            // Красивая подпись с фоном
+            this.ordersGraphics.fillStyle(0x3498db, 0.9);
+            this.ordersGraphics.fillRect(width + 15, buyY - 10, 75, 16);
+            
+            this.add.text(width + 18, buyY - 8, `BUY: $${this.buyPrice.toFixed(2)}`, { 
                 fontSize: '9px', 
-                fill: '#3498db',
+                fill: '#ffffff',
                 fontFamily: 'Arial',
-                backgroundColor: '#ffffff',
-                padding: { left: 2, right: 2, top: 1, bottom: 1 }
+                fontWeight: 'bold'
             });
+        }
+    }
+
+    // Функция для рисования пунктирных линий
+    drawDashedLine(graphics, x1, y1, x2, y2, dashLength, gapLength) {
+        const distance = Phaser.Math.Distance.Between(x1, y1, x2, y2);
+        const dashTotal = dashLength + gapLength;
+        const dashes = Math.floor(distance / dashTotal);
+        const remainder = distance % dashTotal;
+        
+        let currentX = x1;
+        let currentY = y1;
+        
+        for (let i = 0; i < dashes; i++) {
+            const dashProgress = (i * dashTotal) / distance;
+            const nextDashProgress = ((i * dashTotal) + dashLength) / distance;
+            
+            const dashX1 = Phaser.Math.Interpolation.Linear([x1, x2], dashProgress);
+            const dashY1 = Phaser.Math.Interpolation.Linear([y1, y2], dashProgress);
+            const dashX2 = Phaser.Math.Interpolation.Linear([x1, x2], nextDashProgress);
+            const dashY2 = Phaser.Math.Interpolation.Linear([y1, y2], nextDashProgress);
+            
+            graphics.lineBetween(dashX1, dashY1, dashX2, dashY2);
         }
     }
 
@@ -509,7 +713,6 @@ class GameScene extends Phaser.Scene {
     setStopOrder() {
         if (!this.isHolding) return;
         
-        // Простая установка стоп-ордеров
         this.stopLoss = this.buyPrice * 0.95;
         this.takeProfit = this.buyPrice * 1.10;
         
@@ -567,14 +770,7 @@ class GameScene extends Phaser.Scene {
     }
 }
 
-// Добавляем метод setLineDash для Graphics (если не поддерживается)
-Phaser.GameObjects.Graphics.prototype.setLineDash = function(dashArray) {
-    if (this.context.setLineDash) {
-        this.context.setLineDash(dashArray);
-    }
-};
-
-// Конфигурация Phaser - ФИКСИРОВАННЫЕ РАЗМЕРЫ для надежности
+// Конфигурация Phaser
 const config = {
     type: Phaser.AUTO,
     width: 400,
@@ -592,7 +788,6 @@ const config = {
 window.addEventListener('DOMContentLoaded', function() {
     console.log('DOM загружен, запускаем игру...');
     
-    // Ждем немного чтобы все точно загрузилось
     setTimeout(() => {
         try {
             const game = new Phaser.Game(config);
