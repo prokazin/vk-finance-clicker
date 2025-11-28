@@ -16,6 +16,10 @@ class GameScene extends Phaser.Scene {
             successfulTrades: 0,
             totalProfit: 0
         };
+        
+        // Размеры для графика
+        this.chartWidth = 380;
+        this.chartHeight = 300;
     }
 
     get currentCurrency() {
@@ -39,8 +43,10 @@ class GameScene extends Phaser.Scene {
     }
 
     create() {
-        this.createChart();
+        // Сначала создаем UI
         this.createUI();
+        // Затем график
+        this.createChart();
         
         this.time.addEvent({
             delay: 200,
@@ -51,12 +57,15 @@ class GameScene extends Phaser.Scene {
     }
 
     createChart() {
+        // Инициализируем историю цен для всех валют
         this.currentCurrencies.forEach(currency => {
+            currency.history = [];
             for (let i = 0; i < 100; i++) {
                 currency.history.push(currency.price);
             }
         });
 
+        // Создаем график в фиксированной позиции
         this.chart = this.add.graphics();
         this.updateChart();
     }
@@ -65,6 +74,7 @@ class GameScene extends Phaser.Scene {
         const uiContainer = document.createElement('div');
         uiContainer.className = 'ui-overlay';
         
+        // Верхняя панель
         const topPanel = document.createElement('div');
         topPanel.className = 'top-panel';
         topPanel.innerHTML = `
@@ -94,19 +104,21 @@ class GameScene extends Phaser.Scene {
                         <span class="stat-value" id="totalProfit">0</span>
                     </div>
                     <div class="stat-item">
-                        Баланс
-                        <span class="stat-value">${this.ownedCoins}</span>
+                        Монет
+                        <span class="stat-value" id="coinsCount">0</span>
                     </div>
                 </div>
             </div>
         `;
         uiContainer.appendChild(topPanel);
 
+        // Область графика (просто div для позиционирования)
         const chartArea = document.createElement('div');
         chartArea.className = 'chart-area';
         chartArea.id = 'chart-area';
         uiContainer.appendChild(chartArea);
 
+        // Нижняя панель
         const bottomPanel = document.createElement('div');
         bottomPanel.className = 'bottom-panel';
         bottomPanel.innerHTML = `
@@ -120,6 +132,12 @@ class GameScene extends Phaser.Scene {
 
         document.body.appendChild(uiContainer);
 
+        // Назначаем обработчики
+        this.setupEventListeners();
+        this.updateStatsUI();
+    }
+
+    setupEventListeners() {
         this.buyBtn = document.getElementById('buyBtn');
         this.sellBtn = document.getElementById('sellBtn');
         this.balanceChange = document.getElementById('balanceChange');
@@ -129,6 +147,7 @@ class GameScene extends Phaser.Scene {
         this.totalTradesEl = document.getElementById('totalTrades');
         this.successfulTradesEl = document.getElementById('successfulTrades');
         this.totalProfitEl = document.getElementById('totalProfit');
+        this.coinsCountEl = document.getElementById('coinsCount');
         this.leaderboardBtn = document.getElementById('leaderboardBtn');
 
         this.buyBtn.onclick = () => this.buyCoin();
@@ -136,8 +155,6 @@ class GameScene extends Phaser.Scene {
         this.prevCurrencyBtn.onclick = () => this.switchCurrency(-1);
         this.nextCurrencyBtn.onclick = () => this.switchCurrency(1);
         this.leaderboardBtn.onclick = () => this.showLeaderboard();
-
-        this.updateStatsUI();
     }
 
     switchCurrency(direction) {
@@ -181,21 +198,24 @@ class GameScene extends Phaser.Scene {
     updateChart() {
         this.chart.clear();
         
-        const chartArea = document.getElementById('chart-area');
-        const width = chartArea.offsetWidth;
-        const height = chartArea.offsetHeight;
-        
         const history = this.priceHistory;
+        const width = this.chartWidth;
+        const height = this.chartHeight;
         
         const minPrice = Math.min(...history);
         const maxPrice = Math.max(...history);
         const range = maxPrice - minPrice || 1;
         
+        // Рисуем фон графика
+        this.chart.fillStyle(0xf8f9fa);
+        this.chart.fillRect(10, 120, width, height);
+        
+        // Рисуем линию графика
         this.chart.lineStyle(3, this.currentCurrency.color, 1);
         
         history.forEach((price, index) => {
-            const x = (index / (history.length - 1)) * width;
-            const y = height - ((price - minPrice) / range) * height * 0.8 - height * 0.1;
+            const x = 10 + (index / (history.length - 1)) * width;
+            const y = 120 + height - ((price - minPrice) / range) * height;
             
             if (index === 0) {
                 this.chart.moveTo(x, y);
@@ -208,24 +228,29 @@ class GameScene extends Phaser.Scene {
     }
 
     updateUI() {
-        document.querySelector('.balance-amount').textContent = `$${this.balance.toFixed(2)}`;
-        document.querySelector('.stat-item:nth-child(4) .stat-value').textContent = this.ownedCoins;
-        
-        if (this.isHolding) {
-            const profit = (this.currentPrice - this.buyPrice) * this.ownedCoins;
-            const profitPercent = ((this.currentPrice - this.buyPrice) / this.buyPrice) * 100;
+        if (this.balanceChange) {
+            document.querySelector('.balance-amount').textContent = `$${this.balance.toFixed(2)}`;
+            this.coinsCountEl.textContent = this.ownedCoins;
             
-            this.balanceChange.textContent = `${profit >= 0 ? '+' : ''}${profit.toFixed(2)} (${profitPercent.toFixed(2)}%)`;
-            this.balanceChange.className = `balance-change ${profit >= 0 ? 'profit' : 'loss'}`;
-        } else {
-            this.balanceChange.textContent = '';
+            if (this.isHolding) {
+                const profit = (this.currentPrice - this.buyPrice) * this.ownedCoins;
+                const profitPercent = ((this.currentPrice - this.buyPrice) / this.buyPrice) * 100;
+                
+                this.balanceChange.textContent = `${profit >= 0 ? '+' : ''}${profit.toFixed(2)} (${profitPercent.toFixed(2)}%)`;
+                this.balanceChange.className = `balance-change ${profit >= 0 ? 'profit' : 'loss'}`;
+            } else {
+                this.balanceChange.textContent = '';
+            }
         }
     }
 
     updateStatsUI() {
-        this.totalTradesEl.textContent = this.stats.totalTrades;
-        this.successfulTradesEl.textContent = this.stats.successfulTrades;
-        this.totalProfitEl.textContent = this.stats.totalProfit.toFixed(2);
+        if (this.totalTradesEl) {
+            this.totalTradesEl.textContent = this.stats.totalTrades;
+            this.successfulTradesEl.textContent = this.stats.successfulTrades;
+            this.totalProfitEl.textContent = this.stats.totalProfit.toFixed(2);
+            this.coinsCountEl.textContent = this.ownedCoins;
+        }
     }
 
     buyCoin() {
@@ -241,6 +266,7 @@ class GameScene extends Phaser.Scene {
             this.buyBtn.disabled = true;
             this.sellBtn.disabled = false;
             
+            this.updateUI();
             this.saveGameData();
         }
     }
@@ -264,6 +290,7 @@ class GameScene extends Phaser.Scene {
         this.sellBtn.disabled = true;
         
         this.updateStatsUI();
+        this.updateUI();
         this.saveGameData();
     }
 
@@ -323,14 +350,10 @@ class GameScene extends Phaser.Scene {
 const config = {
     type: Phaser.AUTO,
     parent: 'game-container',
+    width: 400,
+    height: 600,
     backgroundColor: '#f8f9fa',
-    scene: GameScene,
-    scale: {
-        mode: Phaser.Scale.RESIZE,
-        autoCenter: Phaser.Scale.CENTER_BOTH,
-        width: '100%',
-        height: '100%'
-    }
+    scene: GameScene
 };
 
 window.addEventListener('DOMContentLoaded', () => {
