@@ -19,7 +19,18 @@ body {
     max-width: 400px;
     height: 600px;
     background: white;
-    border-radius: 20px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    border-radius: 15px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
     overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Адаптивность для всех телефонов */
+@media (max-height: 700px) {
+    #game-container {
+        height: 100vh;
+        border-radius: 0;
+        max-width: 100%;
+    }
 }
