@@ -1,83 +1,27 @@
-body {
-    margin: 0;
-    background: #0e0e0e;
-    color: #fff;
-    font-family: Arial;
+:root{
+  --bg:#0b1220; --card:#0f1724; --muted:#9aa8b6; --accent:#1db954; --danger:#ff4d4f; --text:#e6eef6;
 }
-
-.top {
-    background: #1a1a1a;
-    padding: 12px;
-    display: flex;
-    justify-content: space-between;
-}
-
-.balance p {
-    margin: 3px 0;
-}
-
-.click-btn {
-    background: #ffc400;
-    padding: 10px 15px;
-    border-radius: 8px;
-    border: none;
-    font-size: 18px;
-    font-weight: bold;
-}
-
-.tabs {
-    display: flex;
-}
-
-.tab {
-    flex: 1;
-    padding: 12px;
-    background: #1a1a1a;
-    border: none;
-    color: #aaa;
-    font-size: 16px;
-}
-
-.tab.active {
-    background: #262626;
-    color: #fff;
-    font-weight: bold;
-}
-
-.tab-content { display: none; padding: 15px; }
-.tab-content.active { display: block; }
-
-.chart {
-    height: 350px;
-    margin-top: 10px;
-    border-radius: 8px;
-}
-
-.asset-select {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 10px;
-    background: #222;
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-}
-
-.buy { background:#0f0; padding:10px; margin-right:10px; border:none; }
-.sell { background:#f00; padding:10px; border:none; }
-
-.net-status { margin-top: 8px; color: #aaa; }
-
-#positions div {
-    background:#222;
-    padding:8px;
-    margin:5px 0;
-    border-radius:6px;
-}
-
-#depositList div {
-    background:#222;
-    padding:8px;
-    margin:5px 0;
-    border-radius:6px;
-}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
+.app{max-width:1200px;margin:12px auto;padding:12px}
+.header{display:flex;justify-content:space-between;align-items:center;padding:8px 0}
+.brand h1{margin:0;font-size:20px}
+.subtitle{font-size:12px;color:var(--muted)}
+.balances{display:flex;gap:14px;font-size:14px}
+.main{display:flex;gap:12px;margin-top:12px}
+.left{width:320px}
+.center{flex:1}
+.right{width:300px}
+.card{background:var(--card);padding:12px;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,0.5);margin-bottom:12px}
+.row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.btn{padding:8px 10px;border-radius:8px;border:0;background:#16202b;color:var(--text);cursor:pointer}
+.primary{background:linear-gradient(90deg,var(--accent),#19a84a);color:#001}
+.danger{background:linear-gradient(90deg,var(--danger),#ff7373);color:#001}
+.muted{color:var(--muted);font-size:13px}
+.chart{height:420px;border-radius:8px}
+.chart-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.asset-select{padding:8px;border-radius:8px;background:#111;border:1px solid rgba(255,255,255,0.03);color:var(--text)}
+.history-card ul{list-style:none;padding:0;margin:0;max-height:200px;overflow:auto}
+.history-card li{padding:6px;border-bottom:1px solid rgba(255,255,255,0.02);font-size:13px;color:var(--muted)}
+.footer{margin-top:8px;text-align:center;color:var(--muted);font-size:12px}
+@media(max-width:1000px){.main{flex-direction:column}.left,.right{width:auto}}
