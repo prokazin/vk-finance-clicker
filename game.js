@@ -10,9 +10,9 @@ class GameScene extends Phaser.Scene {
         this.eventEndTime = 0;
         
         this.currencies = [
-            { name: 'VKoin', price: 100, history: [], color: 0x3498db, volatility: 0.3 },
-            { name: 'Memecoin', price: 50, history: [], color: 0xe74c3c, volatility: 0.6 },
-            { name: 'Social Token', price: 200, history: [], color: 0x9b59b6, volatility: 0.2 }
+            { name: 'VKoin', price: 100, history: [], color: 0x007AFF, volatility: 0.3 },
+            { name: 'Memecoin', price: 50, history: [], color: 0xFF3B30, volatility: 0.6 },
+            { name: 'Social Token', price: 200, history: [], color: 0x5856D6, volatility: 0.2 }
         ];
         this.currentCurrencyIndex = 0;
         
@@ -22,6 +22,20 @@ class GameScene extends Phaser.Scene {
             totalProfit: 0
         };
 
+        // iOS-style цвета
+        this.colors = {
+            background: 0xF2F2F7,
+            card: 0xFFFFFF,
+            textPrimary: 0x000000,
+            textSecondary: 0x8E8E93,
+            green: 0x34C759,
+            red: 0xFF3B30,
+            blue: 0x007AFF,
+            purple: 0x5856D6,
+            orange: 0xFF9500,
+            gray: 0xC7C7CC
+        };
+
         this.eventsSystem = {
             news: [
                 {
@@ -29,7 +43,7 @@ class GameScene extends Phaser.Scene {
                     title: "🚀 Космический рост!",
                     description: "Институциональные инвесторы входят в рынок",
                     effect: { multiplier: 2.2, duration: 15000 },
-                    color: 0x27ae60,
+                    color: 0x34C759,
                     icon: "🚀"
                 },
                 {
@@ -37,7 +51,7 @@ class GameScene extends Phaser.Scene {
                     title: "📈 Бычий прорыв!",
                     description: "Цены обновляют годовые максимумы",
                     effect: { multiplier: 1.8, duration: 12000 },
-                    color: 0x2ecc71,
+                    color: 0x34C759,
                     icon: "📈"
                 },
                 {
@@ -45,7 +59,7 @@ class GameScene extends Phaser.Scene {
                     title: "📉 Обвал рынка!",
                     description: "Паника на глобальных биржах",
                     effect: { multiplier: 0.4, duration: 14000 },
-                    color: 0xe74c3c,
+                    color: 0xFF3B30,
                     icon: "📉"
                 },
                 {
@@ -53,7 +67,7 @@ class GameScene extends Phaser.Scene {
                     title: "🐻 Медвежья ловушка!",
                     description: "Крупные игроки открывают шорты",
                     effect: { multiplier: 0.6, duration: 12000 },
-                    color: 0xc0392b,
+                    color: 0xFF3B30,
                     icon: "🐻"
                 }
             ],
@@ -82,6 +96,9 @@ class GameScene extends Phaser.Scene {
         console.log('Сцена создается');
         
         this.calculateLayout();
+        
+        // Устанавливаем iOS-style фон
+        this.cameras.main.setBackgroundColor(this.colors.background);
         
         this.currencies.forEach(currency => {
             currency.history = [];
@@ -133,117 +150,148 @@ class GameScene extends Phaser.Scene {
         const chartY = this.layout.headerHeight + this.layout.chartHeight / 2;
         const buttonY = this.layout.headerHeight + this.layout.chartHeight + this.layout.buttonHeight / 2;
 
-        // Верхняя панель
-        this.currencyText = this.add.text(centerX, headerY - 25, this.currentCurrency.name, {
-            fontSize: this.getAdaptiveFontSize(24),
-            fill: '#2c3e50',
-            fontFamily: 'Arial',
-            fontWeight: 'bold'
+        // iOS-style карточка для заголовка
+        this.headerCard = this.add.rectangle(centerX, headerY, width - this.layout.padding * 2, this.layout.headerHeight - 20, this.colors.card)
+            .setStrokeStyle(1, this.colors.gray);
+
+        // Верхняя панель - iOS стиль
+        this.currencyText = this.add.text(centerX, headerY - 35, this.currentCurrency.name, {
+            fontSize: this.getAdaptiveFontSize(28),
+            fill: this.hexToColor(this.colors.textPrimary),
+            fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont',
+            fontWeight: '700'
         }).setOrigin(0.5);
 
-        this.balanceText = this.add.text(centerX, headerY, `Баланс: $${this.balance.toFixed(2)}`, {
+        this.priceText = this.add.text(centerX, headerY - 5, `$${this.currentCurrency.price.toFixed(2)}`, {
+            fontSize: this.getAdaptiveFontSize(32),
+            fill: this.hexToColor(this.colors.textPrimary),
+            fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont',
+            fontWeight: '700'
+        }).setOrigin(0.5);
+
+        this.balanceText = this.add.text(centerX, headerY + 25, `Баланс: $${this.balance.toFixed(2)}`, {
+            fontSize: this.getAdaptiveFontSize(16),
+            fill: this.hexToColor(this.colors.textSecondary),
+            fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
+            fontWeight: '400'
+        }).setOrigin(0.5);
+
+        // Кнопки переключения валют - iOS стиль
+        this.prevButton = this.add.rectangle(this.layout.padding + 40, headerY - 5, 60, 36, this.colors.card)
+            .setStrokeStyle(1, this.colors.gray)
+            .setInteractive();
+        this.add.text(this.layout.padding + 40, headerY - 5, '←', {
             fontSize: this.getAdaptiveFontSize(20),
-            fill: '#2c3e50',
-            fontFamily: 'Arial'
+            fill: this.hexToColor(this.colors.blue),
+            fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont',
+            fontWeight: '600'
         }).setOrigin(0.5);
 
-        // Кнопки переключения валют
-        this.prevButton = this.add.text(this.layout.padding + 25, headerY - 10, '←', {
-            fontSize: this.getAdaptiveFontSize(24),
-            fill: '#3498db',
-            fontFamily: 'Arial',
-            fontWeight: 'bold'
-        }).setInteractive();
-
-        this.nextButton = this.add.text(width - this.layout.padding - 25, headerY - 10, '→', {
-            fontSize: this.getAdaptiveFontSize(24),
-            fill: '#3498db',
-            fontFamily: 'Arial',
-            fontWeight: 'bold'
-        }).setInteractive();
+        this.nextButton = this.add.rectangle(width - this.layout.padding - 40, headerY - 5, 60, 36, this.colors.card)
+            .setStrokeStyle(1, this.colors.gray)
+            .setInteractive();
+        this.add.text(width - this.layout.padding - 40, headerY - 5, '→', {
+            fontSize: this.getAdaptiveFontSize(20),
+            fill: this.hexToColor(this.colors.blue),
+            fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont',
+            fontWeight: '600'
+        }).setOrigin(0.5);
 
         // Статистика
-        this.statsText = this.add.text(centerX, headerY + 25, this.getStatsString(), {
+        this.statsText = this.add.text(centerX, headerY + 50, this.getStatsString(), {
             fontSize: this.getAdaptiveFontSize(14),
-            fill: '#666',
-            fontFamily: 'Arial'
+            fill: this.hexToColor(this.colors.textSecondary),
+            fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
+            fontWeight: '400'
         }).setOrigin(0.5);
 
         // Прибыль/убыток
-        this.profitText = this.add.text(centerX, headerY + 45, '', {
-            fontSize: this.getAdaptiveFontSize(16),
-            fill: '#27ae60',
-            fontFamily: 'Arial'
+        this.profitText = this.add.text(centerX, headerY + 70, '', {
+            fontSize: this.getAdaptiveFontSize(18),
+            fill: this.hexToColor(this.colors.green),
+            fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont',
+            fontWeight: '600'
         }).setOrigin(0.5);
 
-        // Панель события
-        this.eventPanel = this.add.rectangle(centerX, headerY + 70, width - this.layout.padding * 2, 35, 0x2c3e50, 0)
+        // iOS-style карточка для графика
+        this.chartCard = this.add.rectangle(centerX, chartY, width - this.layout.padding * 2, this.layout.chartHeight - 20, this.colors.card)
+            .setStrokeStyle(1, this.colors.gray);
+
+        // Панель события - iOS уведомление
+        this.eventPanel = this.add.rectangle(centerX, headerY + 100, width - this.layout.padding * 2, 45, 0x000000, 0)
             .setVisible(false);
-        this.eventText = this.add.text(centerX, headerY + 70, '', {
-            fontSize: this.getAdaptiveFontSize(13),
-            fill: '#ffffff',
-            fontFamily: 'Arial',
-            fontWeight: 'bold'
+        this.eventText = this.add.text(centerX, headerY + 100, '', {
+            fontSize: this.getAdaptiveFontSize(14),
+            fill: '#FFFFFF',
+            fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
+            fontWeight: '500'
         }).setOrigin(0.5).setVisible(false);
 
-        // ОСНОВНЫЕ КНОПКИ С ОТСТУПАМИ
-        const buttonWidth = this.getAdaptiveSize(140);
-        const buttonHeight = this.getAdaptiveSize(50);
-        const buttonSpacing = 20;
+        // iOS-style кнопки действий
+        const buttonWidth = this.getAdaptiveSize(150);
+        const buttonHeight = this.getAdaptiveSize(52);
+        const buttonSpacing = 15;
+        const buttonRadius = 12;
         
-        // Кнопка LONG (слева)
-        this.longButton = this.add.rectangle(centerX - buttonWidth - buttonSpacing/2, buttonY - 25, buttonWidth, buttonHeight, 0x27ae60)
+        // Кнопка LONG (iOS green)
+        this.longButton = this.add.rectangle(centerX - buttonWidth - buttonSpacing/2, buttonY - 30, buttonWidth, buttonHeight, this.colors.green)
             .setInteractive();
-        this.add.text(centerX - buttonWidth - buttonSpacing/2, buttonY - 25, 'LONG', {
+        this.add.text(centerX - buttonWidth - buttonSpacing/2, buttonY - 30, 'LONG', {
             fontSize: this.getAdaptiveFontSize(18),
             fill: '#FFFFFF',
-            fontFamily: 'Arial',
-            fontWeight: 'bold'
+            fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont',
+            fontWeight: '600'
         }).setOrigin(0.5);
 
-        // Кнопка SHORT (справа)
-        this.shortButton = this.add.rectangle(centerX + buttonWidth + buttonSpacing/2, buttonY - 25, buttonWidth, buttonHeight, 0xe74c3c)
+        // Кнопка SHORT (iOS red)
+        this.shortButton = this.add.rectangle(centerX + buttonWidth + buttonSpacing/2, buttonY - 30, buttonWidth, buttonHeight, this.colors.red)
             .setInteractive();
-        this.add.text(centerX + buttonWidth + buttonSpacing/2, buttonY - 25, 'SHORT', {
+        this.add.text(centerX + buttonWidth + buttonSpacing/2, buttonY - 30, 'SHORT', {
             fontSize: this.getAdaptiveFontSize(18),
             fill: '#FFFFFF',
-            fontFamily: 'Arial',
-            fontWeight: 'bold'
+            fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont',
+            fontWeight: '600'
         }).setOrigin(0.5);
 
-        // Кнопка закрытия позиции (по центру между LONG и SHORT)
-        this.closeButton = this.add.rectangle(centerX, buttonY - 25, buttonWidth * 1.2, buttonHeight, 0xf39c12)
+        // Кнопка закрытия позиции (iOS orange)
+        this.closeButton = this.add.rectangle(centerX, buttonY - 30, buttonWidth * 1.3, buttonHeight, this.colors.orange)
             .setInteractive();
-        this.add.text(centerX, buttonY - 25, 'ЗАКРЫТЬ', {
-            fontSize: this.getAdaptiveFontSize(16),
+        this.add.text(centerX, buttonY - 30, 'CLOSE', {
+            fontSize: this.getAdaptiveFontSize(18),
             fill: '#FFFFFF',
-            fontFamily: 'Arial',
-            fontWeight: 'bold'
+            fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont',
+            fontWeight: '600'
         }).setOrigin(0.5);
 
-        // Кнопка стоп-ордеров (ниже основных кнопок)
+        // iOS-style кнопка стоп-ордеров
         const stopButtonWidth = this.getAdaptiveSize(200);
-        const stopButtonHeight = this.getAdaptiveSize(40);
-        this.stopButton = this.add.rectangle(centerX, buttonY + 15, stopButtonWidth, stopButtonHeight, 0x9b59b6)
+        const stopButtonHeight = this.getAdaptiveSize(44);
+        this.stopButton = this.add.rectangle(centerX, buttonY + 15, stopButtonWidth, stopButtonHeight, this.colors.purple)
             .setInteractive();
-        this.add.text(centerX, buttonY + 15, 'СТОП-ОРДЕР', {
+        this.add.text(centerX, buttonY + 15, 'STOP ORDER', {
             fontSize: this.getAdaptiveFontSize(16),
             fill: '#FFFFFF',
-            fontFamily: 'Arial',
-            fontWeight: 'bold'
+            fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont',
+            fontWeight: '600'
         }).setOrigin(0.5);
 
-        // Информация о позиции (над кнопками)
-        this.positionInfo = this.add.text(centerX, buttonY - 55, '', {
-            fontSize: this.getAdaptiveFontSize(12),
-            fill: '#2c3e50',
-            fontFamily: 'Arial',
-            backgroundColor: '#ecf0f1',
-            padding: { left: 10, right: 10, top: 5, bottom: 5 }
+        // iOS-style информационная панель позиции
+        this.positionCard = this.add.rectangle(centerX, buttonY - 65, width - this.layout.padding * 2, 45, this.colors.card)
+            .setStrokeStyle(1, this.colors.gray);
+        
+        this.positionInfo = this.add.text(centerX, buttonY - 65, 'No Open Position', {
+            fontSize: this.getAdaptiveFontSize(15),
+            fill: this.hexToColor(this.colors.textSecondary),
+            fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
+            fontWeight: '400'
         }).setOrigin(0.5);
 
         this.updateButtonStates();
         this.updatePositionInfo();
+    }
+
+    hexToColor(hex) {
+        return '#' + hex.toString(16).padStart(6, '0');
     }
 
     getAdaptiveFontSize(baseSize) {
@@ -414,6 +462,9 @@ class GameScene extends Phaser.Scene {
             currency.history.shift();
         }
         
+        // Обновляем цену в реальном времени
+        this.priceText.setText(`$${currency.price.toFixed(2)}`);
+        
         this.checkStopOrders();
         this.updateChart();
         this.updateUI();
@@ -424,20 +475,21 @@ class GameScene extends Phaser.Scene {
         this.ordersGraphics.clear();
         
         const { width, height } = this.cameras.main;
-        const chartWidth = width - this.layout.padding * 2;
-        const chartHeight = this.layout.chartHeight - 40;
-        const startY = this.layout.headerHeight + 20;
+        const chartWidth = width - this.layout.padding * 2 - 40;
+        const chartHeight = this.layout.chartHeight - 60;
+        const startX = this.layout.padding + 20;
+        const startY = this.layout.headerHeight + 30;
         
         const history = this.currentCurrency.history;
         const minPrice = Math.min(...history);
         const maxPrice = Math.max(...history);
         const range = maxPrice - minPrice || 1;
         
-        // Рисуем линию графика
-        this.chart.lineStyle(3, this.currentCurrency.color, 1);
+        // Рисуем линию графика - iOS стиль
+        this.chart.lineStyle(4, this.currentCurrency.color, 1);
         
         history.forEach((price, index) => {
-            const x = this.layout.padding + (index / (history.length - 1)) * chartWidth;
+            const x = startX + (index / (history.length - 1)) * chartWidth;
             const y = startY + chartHeight - ((price - minPrice) / range) * chartHeight;
             
             if (index === 0) {
@@ -449,90 +501,83 @@ class GameScene extends Phaser.Scene {
         
         this.chart.strokePath();
         
-        // ВИЗУАЛИЗАЦИЯ ПОЗИЦИЙ И ОРДЕРОВ (ВЕРНУЛИ ИНДИКАТОРЫ)
+        // ВИЗУАЛИЗАЦИЯ ПОЗИЦИЙ И ОРДЕРОВ - iOS стиль
         if (this.hasPosition) {
-            this.drawPositionMarkers(minPrice, maxPrice, startY, chartHeight, range, chartWidth);
+            this.drawPositionMarkers(minPrice, maxPrice, startY, chartHeight, range, chartWidth, startX);
         }
     }
 
-    drawPositionMarkers(minPrice, maxPrice, startY, height, range, width) {
+    drawPositionMarkers(minPrice, maxPrice, startY, height, range, width, startX) {
         // Маркер цены входа
         const entryY = startY + height - ((this.position.entryPrice - minPrice) / range) * height;
         
-        const positionColor = this.position.type === 'long' ? 0x27ae60 : 0xe74c3c;
+        const positionColor = this.position.type === 'long' ? this.colors.green : this.colors.red;
         
-        // Пунктирная линия цены входа через весь график
-        this.ordersGraphics.lineStyle(2, positionColor, 0.6);
+        // Пунктирная линия цены входа - iOS стиль
+        this.ordersGraphics.lineStyle(2, positionColor, 0.3);
         this.drawDashedLine(this.ordersGraphics, 
-            this.layout.padding, entryY, 
-            this.layout.padding + width, entryY, 8, 4);
+            startX, entryY, 
+            startX + width, entryY, 6, 4);
         
-        // Маркер точки входа
+        // Маркер точки входа - iOS стиль
         this.ordersGraphics.fillStyle(positionColor, 1);
-        this.ordersGraphics.fillCircle(this.layout.padding + width + 3, entryY, 6);
+        this.ordersGraphics.fillCircle(startX + width + 5, entryY, 8);
         
-        this.ordersGraphics.lineStyle(2, 0xffffff, 1);
-        this.ordersGraphics.strokeCircle(this.layout.padding + width + 3, entryY, 6);
+        this.ordersGraphics.lineStyle(2, this.colors.card, 1);
+        this.ordersGraphics.strokeCircle(startX + width + 5, entryY, 8);
         
-        // Подпись позиции
+        // Подпись позиции - iOS стиль
         this.ordersGraphics.fillStyle(positionColor, 0.9);
-        this.ordersGraphics.fillRect(this.layout.padding + width + 10, entryY - 10, 85, 16);
+        this.ordersGraphics.fillRoundedRect(startX + width + 15, entryY - 12, 90, 24, 6);
         
         const positionText = this.position.type === 'long' ? 'LONG' : 'SHORT';
-        this.add.text(this.layout.padding + width + 13, entryY - 8, `${positionText}: $${this.position.entryPrice.toFixed(2)}`, { 
-            fontSize: this.getAdaptiveFontSize(9),
-            fill: '#ffffff',
-            fontFamily: 'Arial',
-            fontWeight: 'bold'
+        this.add.text(startX + width + 20, entryY - 10, `${positionText}: $${this.position.entryPrice.toFixed(2)}`, { 
+            fontSize: this.getAdaptiveFontSize(10),
+            fill: '#FFFFFF',
+            fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
+            fontWeight: '600'
         });
 
-        // Стоп-лосс и тейк-профит
+        // Стоп-лосс и тейк-профит - iOS стиль
         if (this.stopLoss > 0) {
             const stopY = startY + height - ((this.stopLoss - minPrice) / range) * height;
-            const stopColor = 0xe74c3c;
             
-            this.ordersGraphics.lineStyle(3, stopColor, 0.9);
-            this.ordersGraphics.lineBetween(this.layout.padding, stopY, this.layout.padding + width, stopY);
+            this.ordersGraphics.lineStyle(3, this.colors.red, 0.8);
+            this.ordersGraphics.lineBetween(startX, stopY, startX + width, stopY);
             
-            this.ordersGraphics.fillStyle(stopColor, 0.9);
-            this.ordersGraphics.fillRect(this.layout.padding + 5, stopY - 12, 60, 16);
+            this.ordersGraphics.fillStyle(this.colors.red, 0.9);
+            this.ordersGraphics.fillRoundedRect(startX + 5, stopY - 14, 70, 28, 6);
             
-            this.add.text(this.layout.padding + 10, stopY - 10, `SL: $${this.stopLoss.toFixed(2)}`, { 
-                fontSize: this.getAdaptiveFontSize(10),
-                fill: '#ffffff',
-                fontFamily: 'Arial',
-                fontWeight: 'bold'
+            this.add.text(startX + 10, stopY - 12, `SL: $${this.stopLoss.toFixed(2)}`, { 
+                fontSize: this.getAdaptiveFontSize(11),
+                fill: '#FFFFFF',
+                fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
+                fontWeight: '600'
             });
         }
         
         if (this.takeProfit > 0) {
             const profitY = startY + height - ((this.takeProfit - minPrice) / range) * height;
-            const profitColor = 0x27ae60;
             
-            this.ordersGraphics.lineStyle(3, profitColor, 0.9);
-            this.ordersGraphics.lineBetween(this.layout.padding, profitY, this.layout.padding + width, profitY);
+            this.ordersGraphics.lineStyle(3, this.colors.green, 0.8);
+            this.ordersGraphics.lineBetween(startX, profitY, startX + width, profitY);
             
-            this.ordersGraphics.fillStyle(profitColor, 0.9);
-            this.ordersGraphics.fillRect(this.layout.padding + 5, profitY - 12, 65, 16);
+            this.ordersGraphics.fillStyle(this.colors.green, 0.9);
+            this.ordersGraphics.fillRoundedRect(startX + 5, profitY - 14, 75, 28, 6);
             
-            this.add.text(this.layout.padding + 10, profitY - 10, `TP: $${this.takeProfit.toFixed(2)}`, { 
-                fontSize: this.getAdaptiveFontSize(10),
-                fill: '#ffffff',
-                fontFamily: 'Arial',
-                fontWeight: 'bold'
+            this.add.text(startX + 10, profitY - 12, `TP: $${this.takeProfit.toFixed(2)}`, { 
+                fontSize: this.getAdaptiveFontSize(11),
+                fill: '#FFFFFF',
+                fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
+                fontWeight: '600'
             });
         }
     }
 
-    // Функция для рисования пунктирных линий
     drawDashedLine(graphics, x1, y1, x2, y2, dashLength, gapLength) {
         const distance = Phaser.Math.Distance.Between(x1, y1, x2, y2);
         const dashTotal = dashLength + gapLength;
         const dashes = Math.floor(distance / dashTotal);
-        const remainder = distance % dashTotal;
-        
-        let currentX = x1;
-        let currentY = y1;
         
         for (let i = 0; i < dashes; i++) {
             const dashProgress = (i * dashTotal) / distance;
@@ -556,7 +601,7 @@ class GameScene extends Phaser.Scene {
             const profitPercent = this.calculateProfitPercent();
             
             this.profitText.setText(`${profit >= 0 ? '+' : ''}${profit.toFixed(2)} (${profitPercent.toFixed(2)}%)`);
-            this.profitText.setFill(profit >= 0 ? '#27ae60' : '#e74c3c');
+            this.profitText.setFill(this.hexToColor(profit >= 0 ? this.colors.green : this.colors.red));
         } else {
             this.profitText.setText('');
         }
@@ -580,21 +625,22 @@ class GameScene extends Phaser.Scene {
             const entryPrice = this.position.entryPrice.toFixed(2);
             const coins = this.position.coins;
             const currentProfit = this.calculateCurrentProfit().toFixed(2);
+            const profitPercent = this.calculateProfitPercent().toFixed(2);
             
-            let info = `${type} | Вход: $${entryPrice} | Монет: ${coins}`;
+            let info = `${type} | Entry: $${entryPrice} | Coins: ${coins}`;
             if (this.stopLoss > 0) info += ` | SL: $${this.stopLoss.toFixed(2)}`;
             if (this.takeProfit > 0) info += ` | TP: $${this.takeProfit.toFixed(2)}`;
             
             this.positionInfo.setText(info);
-            this.positionInfo.setFill(this.position.type === 'long' ? '#27ae60' : '#e74c3c');
+            this.positionInfo.setFill(this.hexToColor(this.position.type === 'long' ? this.colors.green : this.colors.red));
         } else {
-            this.positionInfo.setText('Нет открытой позиции');
-            this.positionInfo.setFill('#666');
+            this.positionInfo.setText('No Open Position');
+            this.positionInfo.setFill(this.hexToColor(this.colors.textSecondary));
         }
     }
 
     getStatsString() {
-        return `Сделки: ${this.stats.totalTrades} | Успешные: ${this.stats.successfulTrades} | Прибыль: $${this.stats.totalProfit.toFixed(2)}`;
+        return `Trades: ${this.stats.totalTrades} | Win: ${this.stats.successfulTrades} | P&L: $${this.stats.totalProfit.toFixed(2)}`;
     }
 
     showMessage(text) {
@@ -603,14 +649,20 @@ class GameScene extends Phaser.Scene {
         
         const message = this.add.text(centerX, messageY, text, {
             fontSize: this.getAdaptiveFontSize(16),
-            fill: '#f39c12',
-            fontFamily: 'Arial',
-            backgroundColor: '#ffffff',
-            padding: { left: 15, right: 15, top: 8, bottom: 8 }
+            fill: this.hexToColor(this.colors.textPrimary),
+            fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
+            fontWeight: '500',
+            backgroundColor: this.hexToColor(this.colors.card),
+            padding: { left: 20, right: 20, top: 12, bottom: 12 }
         }).setOrigin(0.5);
         
-        this.time.delayedCall(2000, () => {
-            message.destroy();
+        this.tweens.add({
+            targets: message,
+            alpha: 0,
+            duration: 2000,
+            onComplete: () => {
+                message.destroy();
+            }
         });
     }
 
@@ -625,6 +677,7 @@ class GameScene extends Phaser.Scene {
         }
         
         this.currencyText.setText(this.currentCurrency.name);
+        this.priceText.setText(`$${this.currentCurrency.price.toFixed(2)}`);
         this.updateChart();
         this.updateUI();
     }
@@ -644,7 +697,7 @@ class GameScene extends Phaser.Scene {
         this.activeEvent = event;
         this.eventEndTime = Date.now() + event.effect.duration;
         
-        this.eventPanel.setFillStyle(event.color, 0.9).setVisible(true);
+        this.eventPanel.setFillStyle(event.color, 0.95).setVisible(true);
         this.eventText.setText(`${event.icon} ${event.title} - ${event.description}`).setVisible(true);
         
         this.tweens.add({
@@ -712,7 +765,7 @@ const config = {
     width: window.innerWidth,
     height: window.innerHeight,
     parent: 'game-container',
-    backgroundColor: '#f8f9fa',
+    backgroundColor: 0xF2F2F7,
     scene: GameScene,
     scale: {
         mode: Phaser.Scale.RESIZE,
