@@ -9,7 +9,7 @@ class GameScene extends Phaser.Scene {
         this.activeEvent = null;
         this.eventEndTime = 0;
         
-        // Crypto.com Modern Colors
+        // Crypto.com Modern Colors - refined
         this.colors = {
             background: 0x0D1421,
             primary: 0x00D2FF,
@@ -20,7 +20,8 @@ class GameScene extends Phaser.Scene {
             card: 0x172036,
             textPrimary: 0xFFFFFF,
             textSecondary: 0x8B9CB5,
-            accent: 0x00F0A5
+            accent: 0x00F0A5,
+            border: 0x2A3A57
         };
 
         this.currencies = [
@@ -30,8 +31,7 @@ class GameScene extends Phaser.Scene {
                 history: [], 
                 color: 0x00D2FF, 
                 volatility: 0.3,
-                icon: '●',
-                gradient: [0x00D2FF, 0x884DFF]
+                icon: '●'
             },
             { 
                 name: 'Memecoin', 
@@ -39,8 +39,7 @@ class GameScene extends Phaser.Scene {
                 history: [], 
                 color: 0xFF5476, 
                 volatility: 0.6,
-                icon: '◆',
-                gradient: [0xFF5476, 0xFFD166]
+                icon: '◆'
             },
             { 
                 name: 'Social Token', 
@@ -48,8 +47,7 @@ class GameScene extends Phaser.Scene {
                 history: [], 
                 color: 0x00F0A5, 
                 volatility: 0.2,
-                icon: '■',
-                gradient: [0x00F0A5, 0x884DFF]
+                icon: '■'
             }
         ];
         this.currentCurrencyIndex = 0;
@@ -64,7 +62,9 @@ class GameScene extends Phaser.Scene {
             padding: 24,
             headerHeight: 0,
             chartHeight: 0,
-            buttonHeight: 0
+            buttonHeight: 0,
+            cardRadius: 12,
+            buttonRadius: 8
         };
     }
 
@@ -79,7 +79,7 @@ class GameScene extends Phaser.Scene {
     create() {
         this.calculateLayout();
         
-        // Modern dark background
+        // Clean dark background
         this.cameras.main.setBackgroundColor(this.colors.background);
         
         // Initialize history
@@ -100,16 +100,14 @@ class GameScene extends Phaser.Scene {
             callbackScope: this,
             loop: true
         });
-
-        console.log('🚀 Modern Crypto Trading Started');
     }
 
     calculateLayout() {
         const { width, height } = this.cameras.main;
         this.layout.padding = 24;
-        this.layout.headerHeight = height * 0.20;
-        this.layout.chartHeight = height * 0.45;
-        this.layout.buttonHeight = height * 0.35;
+        this.layout.headerHeight = Math.min(height * 0.22, 160);
+        this.layout.chartHeight = Math.min(height * 0.45, 300);
+        this.layout.buttonHeight = height - this.layout.headerHeight - this.layout.chartHeight;
     }
 
     createChart() {
@@ -126,44 +124,42 @@ class GameScene extends Phaser.Scene {
         const chartY = this.layout.headerHeight + this.layout.chartHeight / 2;
         const buttonY = this.layout.headerHeight + this.layout.chartHeight + this.layout.buttonHeight / 2;
 
-        // Header Section
-        this.createHeader(centerX, headerY, width);
+        // HEADER SECTION - Perfectly aligned
+        this.createHeaderSection(centerX, headerY, width);
 
-        // Chart Section
+        // CHART SECTION - Clean and organized
         this.createChartSection(centerX, chartY, width);
 
-        // Action Buttons Section
-        this.createActionButtons(centerX, buttonY, width);
-
-        // Position Info
-        this.createPositionInfo(centerX, buttonY);
+        // ACTION BUTTONS - Perfectly spaced
+        this.createActionSection(centerX, buttonY, width);
 
         this.updateButtonStates();
         this.updatePositionInfo();
     }
 
-    createHeader(centerX, headerY, width) {
-        // Currency icon with gradient background
-        this.currencyIconBg = this.add.rectangle(centerX, headerY - 15, 60, 60, this.currentCurrency.gradient[0])
-            .setAlpha(0.1);
-        
-        this.currencyIcon = this.add.text(centerX, headerY - 15, this.currentCurrency.icon, {
-            fontSize: '24px',
+    createHeaderSection(centerX, headerY, width) {
+        // Main header card
+        this.headerCard = this.add.rectangle(centerX, headerY, width - this.layout.padding * 2, this.layout.headerHeight - 16, this.colors.card)
+            .setStrokeStyle(1, this.colors.border);
+
+        // Currency icon - perfectly centered
+        this.currencyIcon = this.add.text(centerX, headerY - 25, this.currentCurrency.icon, {
+            fontSize: '28px',
             fill: this.hexToColor(this.currentCurrency.color),
             fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont',
             fontWeight: '600'
         }).setOrigin(0.5);
 
         // Currency name
-        this.currencyText = this.add.text(centerX, headerY + 20, this.currentCurrency.name, {
-            fontSize: '18px',
+        this.currencyText = this.add.text(centerX, headerY, this.currentCurrency.name, {
+            fontSize: '16px',
             fill: this.hexToColor(this.colors.textSecondary),
             fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
             fontWeight: '400'
         }).setOrigin(0.5);
 
-        // Current price - Large and bold
-        this.priceText = this.add.text(centerX, headerY + 45, `$${this.currentCurrency.price.toFixed(2)}`, {
+        // Current price - large and prominent
+        this.priceText = this.add.text(centerX, headerY + 25, `$${this.currentCurrency.price.toFixed(2)}`, {
             fontSize: '32px',
             fill: this.hexToColor(this.colors.textPrimary),
             fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont',
@@ -171,34 +167,35 @@ class GameScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         // Balance display
-        this.balanceText = this.add.text(centerX, headerY + 75, `Balance: $${this.balance.toFixed(2)}`, {
+        this.balanceText = this.add.text(centerX, headerY + 55, `Balance: $${this.balance.toFixed(2)}`, {
             fontSize: '14px',
             fill: this.hexToColor(this.colors.textSecondary),
             fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
             fontWeight: '400'
         }).setOrigin(0.5);
 
-        // Currency switcher
-        const switchSize = 44;
-        this.prevButton = this.createModernButton(this.layout.padding + 40, headerY + 20, switchSize, switchSize, '←', this.colors.primary);
-        this.nextButton = this.createModernButton(width - this.layout.padding - 40, headerY + 20, switchSize, switchSize, '→', this.colors.primary);
+        // Currency switcher - perfectly aligned
+        const switchSize = 40;
+        this.prevButton = this.createRoundedButton(this.layout.padding + 35, headerY + 15, switchSize, switchSize, '←', this.colors.primary);
+        this.nextButton = this.createRoundedButton(width - this.layout.padding - 35, headerY + 15, switchSize, switchSize, '→', this.colors.primary);
     }
 
     createChartSection(centerX, chartY, width) {
-        // Chart card with subtle border
+        // Chart container
         this.chartCard = this.add.rectangle(centerX, chartY, width - this.layout.padding * 2, this.layout.chartHeight - 20, this.colors.card)
-            .setStrokeStyle(1, 0x2A3A57);
+            .setStrokeStyle(1, this.colors.border);
 
         // Chart title
-        this.chartTitle = this.add.text(this.layout.padding + 20, chartY - this.layout.chartHeight/2 + 30, 'PRICE CHART', {
+        this.chartTitle = this.add.text(this.layout.padding + 16, chartY - this.layout.chartHeight/2 + 20, 'PRICE CHART', {
             fontSize: '12px',
             fill: this.hexToColor(this.colors.textSecondary),
             fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
-            fontWeight: '600'
+            fontWeight: '600',
+            letterSpacing: 1
         });
 
-        // Stats display
-        this.statsText = this.add.text(width - this.layout.padding - 20, chartY - this.layout.chartHeight/2 + 30, this.getStatsString(), {
+        // Stats - perfectly aligned to right
+        this.statsText = this.add.text(width - this.layout.padding - 16, chartY - this.layout.chartHeight/2 + 20, this.getStatsString(), {
             fontSize: '12px',
             fill: this.hexToColor(this.colors.textSecondary),
             fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
@@ -206,91 +203,58 @@ class GameScene extends Phaser.Scene {
         }).setOrigin(1, 0);
     }
 
-    createActionButtons(centerX, buttonY, width) {
-        const buttonWidth = 160;
-        const buttonHeight = 56;
-        const buttonSpacing = 16;
-        
+    createActionSection(centerX, buttonY, width) {
+        const isMobile = width < 400;
+        const buttonWidth = isMobile ? 140 : 160;
+        const buttonHeight = 52;
+        const buttonSpacing = isMobile ? 12 : 16;
+
         // Action buttons container
-        this.buttonsCard = this.add.rectangle(centerX, buttonY - 20, width - this.layout.padding * 2, 140, this.colors.card)
-            .setStrokeStyle(1, 0x2A3A57);
+        this.buttonsCard = this.add.rectangle(centerX, buttonY - 10, width - this.layout.padding * 2, 140, this.colors.card)
+            .setStrokeStyle(1, this.colors.border);
 
-        // LONG Button - Gradient green
-        this.longButton = this.add.rectangle(centerX - buttonWidth - buttonSpacing/2, buttonY - 50, buttonWidth, buttonHeight, this.colors.success)
-            .setInteractive();
+        // Position info - centered above buttons
+        this.positionCard = this.add.rectangle(centerX, buttonY - 65, Math.min(width - 80, 320), 36, this.colors.card)
+            .setStrokeStyle(1, this.colors.border);
         
-        this.add.text(centerX - buttonWidth - buttonSpacing/2, buttonY - 50, 'LONG', {
-            fontSize: '18px',
-            fill: '#0D1421',
-            fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont',
-            fontWeight: '700'
-        }).setOrigin(0.5);
-
-        // SHORT Button - Gradient red
-        this.shortButton = this.add.rectangle(centerX + buttonWidth + buttonSpacing/2, buttonY - 50, buttonWidth, buttonHeight, this.colors.danger)
-            .setInteractive();
-        
-        this.add.text(centerX + buttonWidth + buttonSpacing/2, buttonY - 50, 'SHORT', {
-            fontSize: '18px',
-            fill: '#FFFFFF',
-            fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont',
-            fontWeight: '700'
-        }).setOrigin(0.5);
-
-        // CLOSE Button - Primary color
-        this.closeButton = this.add.rectangle(centerX, buttonY - 50, buttonWidth * 1.3, buttonHeight, this.colors.primary)
-            .setInteractive();
-        
-        this.add.text(centerX, buttonY - 50, 'CLOSE POSITION', {
-            fontSize: '16px',
-            fill: '#0D1421',
-            fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont',
-            fontWeight: '700'
-        }).setOrigin(0.5);
-
-        // STOP ORDER Button - Secondary color
-        const stopButtonWidth = 200;
-        const stopButtonHeight = 48;
-        this.stopButton = this.add.rectangle(centerX, buttonY + 10, stopButtonWidth, stopButtonHeight, this.colors.secondary)
-            .setInteractive();
-        
-        this.add.text(centerX, buttonY + 10, 'STOP ORDER', {
-            fontSize: '16px',
-            fill: '#FFFFFF',
-            fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont',
-            fontWeight: '700'
-        }).setOrigin(0.5);
-    }
-
-    createPositionInfo(centerX, buttonY) {
-        // Position info card
-        this.positionCard = this.add.rectangle(centerX, buttonY - 95, 280, 40, this.colors.card)
-            .setStrokeStyle(1, 0x2A3A57);
-        
-        this.positionInfo = this.add.text(centerX, buttonY - 95, 'No active position', {
-            fontSize: '14px',
+        this.positionInfo = this.add.text(centerX, buttonY - 65, 'No active position', {
+            fontSize: '13px',
             fill: this.hexToColor(this.colors.textSecondary),
             fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
             fontWeight: '400'
         }).setOrigin(0.5);
 
         // Profit/Loss display
-        this.profitText = this.add.text(centerX, buttonY - 70, '', {
-            fontSize: '20px',
+        this.profitText = this.add.text(centerX, buttonY - 40, '', {
+            fontSize: '18px',
             fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont',
             fontWeight: '700'
         }).setOrigin(0.5);
+
+        // Action buttons row 1 - perfectly spaced
+        this.longButton = this.createRoundedButton(centerX - buttonWidth - buttonSpacing, buttonY - 10, buttonWidth, buttonHeight, 'LONG', this.colors.success);
+        this.shortButton = this.createRoundedButton(centerX + buttonWidth + buttonSpacing, buttonY - 10, buttonWidth, buttonHeight, 'SHORT', this.colors.danger);
+        
+        // Close button - centered
+        const closeButtonWidth = isMobile ? buttonWidth * 1.2 : buttonWidth * 1.4;
+        this.closeButton = this.createRoundedButton(centerX, buttonY - 10, closeButtonWidth, buttonHeight, 'CLOSE', this.colors.primary);
+
+        // Stop order button - centered below
+        const stopButtonWidth = isMobile ? 180 : 200;
+        this.stopButton = this.createRoundedButton(centerX, buttonY + 35, stopButtonWidth, 46, 'STOP ORDER', this.colors.secondary);
     }
 
-    createModernButton(x, y, width, height, text, color) {
+    createRoundedButton(x, y, width, height, text, color) {
         const button = this.add.rectangle(x, y, width, height, color)
             .setInteractive();
         
+        const textColor = (color === this.colors.success || color === this.colors.primary) ? '#0D1421' : '#FFFFFF';
+        
         this.add.text(x, y, text, {
-            fontSize: '18px',
-            fill: '#FFFFFF',
+            fontSize: width < 150 ? '14px' : '16px',
+            fill: textColor,
             fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont',
-            fontWeight: '600'
+            fontWeight: '700'
         }).setOrigin(0.5);
         
         return button;
@@ -364,7 +328,6 @@ class GameScene extends Phaser.Scene {
         }
         this.stats.totalProfit += profit;
         
-        const positionType = this.position.type.toUpperCase();
         this.position = null;
         this.stopLoss = 0;
         this.takeProfit = 0;
@@ -373,8 +336,7 @@ class GameScene extends Phaser.Scene {
         this.updateChart();
         
         const color = profit >= 0 ? this.colors.success : this.colors.danger;
-        const emoji = profit >= 0 ? '🚀' : '💸';
-        this.showMessage(`${emoji} ${positionType} closed! P&L: $${profit.toFixed(2)}`, color);
+        this.showMessage(`Position closed! P&L: $${profit.toFixed(2)}`, color);
     }
 
     calculateCurrentProfit() {
@@ -464,7 +426,7 @@ class GameScene extends Phaser.Scene {
         const chartWidth = width - this.layout.padding * 2 - 40;
         const chartHeight = this.layout.chartHeight - 80;
         const startX = this.layout.padding + 20;
-        const startY = this.layout.headerHeight + 60;
+        const startY = this.layout.headerHeight + 50;
         
         const history = this.currentCurrency.history;
         if (history.length < 2) return;
@@ -473,7 +435,7 @@ class GameScene extends Phaser.Scene {
         const maxPrice = Math.max(...history);
         const range = maxPrice - minPrice || 1;
         
-        // Modern chart line with gradient effect
+        // Clean chart line
         this.chart.lineStyle(3, this.currentCurrency.color, 1);
         
         for (let i = 0; i < history.length - 1; i++) {
@@ -488,7 +450,6 @@ class GameScene extends Phaser.Scene {
         
         this.chart.strokePath();
         
-        // Draw markers if position exists
         if (this.hasPosition) {
             this.drawPositionMarkers(minPrice, maxPrice, startY, chartHeight, range, chartWidth, startX);
         }
@@ -499,20 +460,20 @@ class GameScene extends Phaser.Scene {
         const positionColor = this.position.type === 'long' ? this.colors.success : this.colors.danger;
         
         // Entry line
-        this.ordersGraphics.lineStyle(2, positionColor, 0.3);
-        this.drawDashedLine(this.ordersGraphics, startX, entryY, startX + width, entryY, 6, 4);
+        this.ordersGraphics.lineStyle(1, positionColor, 0.3);
+        this.drawDashedLine(this.ordersGraphics, startX, entryY, startX + width, entryY, 4, 3);
         
         // Entry marker
         this.ordersGraphics.fillStyle(positionColor, 1);
-        this.ordersGraphics.fillCircle(startX + width + 5, entryY, 6);
+        this.ordersGraphics.fillCircle(startX + width + 4, entryY, 5);
         
         // Entry label
         this.ordersGraphics.fillStyle(positionColor, 0.9);
-        this.ordersGraphics.fillRoundedRect(startX + width + 15, entryY - 12, 85, 24, 8);
+        this.ordersGraphics.fillRect(startX + width + 12, entryY - 10, 80, 20);
         
         const positionText = this.position.type === 'long' ? 'LONG' : 'SHORT';
-        this.add.text(startX + width + 20, entryY - 10, `${positionText} $${this.position.entryPrice.toFixed(2)}`, { 
-            fontSize: '10px',
+        this.add.text(startX + width + 16, entryY - 8, `${positionText} $${this.position.entryPrice.toFixed(2)}`, { 
+            fontSize: '9px',
             fill: '#0D1421',
             fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
             fontWeight: '600'
@@ -526,10 +487,10 @@ class GameScene extends Phaser.Scene {
             this.ordersGraphics.lineBetween(startX, stopY, startX + width, stopY);
             
             this.ordersGraphics.fillStyle(this.colors.danger, 0.9);
-            this.ordersGraphics.fillRoundedRect(startX + 5, stopY - 11, 60, 22, 6);
+            this.ordersGraphics.fillRect(startX + 4, stopY - 9, 55, 18);
             
-            this.add.text(startX + 10, stopY - 9, `SL $${this.stopLoss.toFixed(2)}`, { 
-                fontSize: '9px',
+            this.add.text(startX + 8, stopY - 7, `SL $${this.stopLoss.toFixed(2)}`, { 
+                fontSize: '8px',
                 fill: '#FFFFFF',
                 fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
                 fontWeight: '600'
@@ -544,10 +505,10 @@ class GameScene extends Phaser.Scene {
             this.ordersGraphics.lineBetween(startX, profitY, startX + width, profitY);
             
             this.ordersGraphics.fillStyle(this.colors.success, 0.9);
-            this.ordersGraphics.fillRoundedRect(startX + 5, profitY - 11, 65, 22, 6);
+            this.ordersGraphics.fillRect(startX + 4, profitY - 9, 60, 18);
             
-            this.add.text(startX + 10, profitY - 9, `TP $${this.takeProfit.toFixed(2)}`, { 
-                fontSize: '9px',
+            this.add.text(startX + 8, profitY - 7, `TP $${this.takeProfit.toFixed(2)}`, { 
+                fontSize: '8px',
                 fill: '#0D1421',
                 fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
                 fontWeight: '600'
@@ -626,11 +587,11 @@ class GameScene extends Phaser.Scene {
         const centerX = this.cameras.main.width / 2;
         const messageY = this.layout.headerHeight + this.layout.chartHeight / 2;
         
-        const messageBg = this.add.rectangle(centerX, messageY, 300, 50, color)
-            .setAlpha(0.9);
+        const messageBg = this.add.rectangle(centerX, messageY, 280, 44, color)
+            .setAlpha(0.95);
         
         const message = this.add.text(centerX, messageY, text, {
-            fontSize: '16px',
+            fontSize: '14px',
             fill: '#0D1421',
             fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont',
             fontWeight: '600'
@@ -658,7 +619,7 @@ class GameScene extends Phaser.Scene {
         }
         
         this.currencyIcon.setText(this.currentCurrency.icon);
-        this.currencyIconBg.setFillStyle(this.currentCurrency.gradient[0]).setAlpha(0.1);
+        this.currencyIcon.setFill(this.hexToColor(this.currentCurrency.color));
         this.currencyText.setText(this.currentCurrency.name);
         this.priceText.setText(`$${this.currentCurrency.price.toFixed(2)}`);
         this.updateChart();
