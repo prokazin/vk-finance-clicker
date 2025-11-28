@@ -1,4 +1,3 @@
-// Эмулятор VK Bridge для тестирования вне VK
 if (typeof VK === 'undefined') {
     window.VK = {
         init: function(callback) {
@@ -10,7 +9,6 @@ if (typeof VK === 'undefined') {
             console.log('VK Call:', method, params);
             
             return new Promise((resolve, reject) => {
-                // Эмуляция ответов VK API
                 switch (method) {
                     case 'storage.get':
                         const stored = JSON.parse(localStorage.getItem('vk_storage') || '{}');
@@ -32,11 +30,6 @@ if (typeof VK === 'undefined') {
                         
                     case 'showLeaderboardBox':
                         alert(`Рейтинг друзей\nВаш результат: $${params.user_result}`);
-                        resolve({});
-                        break;
-                        
-                    case 'wall.post':
-                        alert('Результат опубликован на вашей стене!');
                         resolve({});
                         break;
                         
