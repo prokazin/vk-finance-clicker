@@ -3,7 +3,7 @@ class GameScene extends Phaser.Scene {
         super({ key: 'GameScene' });
         
         this.balance = 1000;
-        this.position = null; // { type: 'long'|'short', entryPrice: number, coins: number }
+        this.position = null;
         this.stopLoss = 0;
         this.takeProfit = 0;
         this.activeEvent = null;
@@ -22,10 +22,8 @@ class GameScene extends Phaser.Scene {
             totalProfit: 0
         };
 
-        // Система новостей и событий
         this.eventsSystem = {
             news: [
-                // БЫЧЬИ СОБЫТИЯ (положительные)
                 {
                     id: 1,
                     title: "🚀 Космический рост!",
@@ -42,7 +40,6 @@ class GameScene extends Phaser.Scene {
                     color: 0x2ecc71,
                     icon: "📈"
                 },
-                // ... остальные события (можно оставить как были)
                 {
                     id: 6,
                     title: "📉 Обвал рынка!",
@@ -86,7 +83,6 @@ class GameScene extends Phaser.Scene {
         
         this.calculateLayout();
         
-        // Инициализация данных
         this.currencies.forEach(currency => {
             currency.history = [];
             for (let i = 0; i < 50; i++) {
@@ -98,7 +94,6 @@ class GameScene extends Phaser.Scene {
         this.createUI();
         this.setupEventListeners();
         
-        // Запуск обновления цены
         this.time.addEvent({
             delay: 500,
             callback: this.updatePrice,
@@ -106,7 +101,6 @@ class GameScene extends Phaser.Scene {
             loop: true
         });
 
-        // Запуск случайных событий
         this.time.addEvent({
             delay: 90000,
             callback: this.triggerRandomEvent,
@@ -192,53 +186,55 @@ class GameScene extends Phaser.Scene {
             fontWeight: 'bold'
         }).setOrigin(0.5).setVisible(false);
 
-        // КНОПКИ LONG И SHORT
+        // ОСНОВНЫЕ КНОПКИ С ОТСТУПАМИ
         const buttonWidth = this.getAdaptiveSize(140);
         const buttonHeight = this.getAdaptiveSize(50);
+        const buttonSpacing = 20;
         
-        // Кнопка LONG (покупка)
-        this.longButton = this.add.rectangle(centerX - buttonWidth/1.8, buttonY - 20, buttonWidth, buttonHeight, 0x27ae60)
+        // Кнопка LONG (слева)
+        this.longButton = this.add.rectangle(centerX - buttonWidth - buttonSpacing/2, buttonY - 25, buttonWidth, buttonHeight, 0x27ae60)
             .setInteractive();
-        this.add.text(centerX - buttonWidth/1.8, buttonY - 20, 'LONG', {
+        this.add.text(centerX - buttonWidth - buttonSpacing/2, buttonY - 25, 'LONG', {
             fontSize: this.getAdaptiveFontSize(18),
             fill: '#FFFFFF',
             fontFamily: 'Arial',
             fontWeight: 'bold'
         }).setOrigin(0.5);
 
-        // Кнопка SHORT (продажа)
-        this.shortButton = this.add.rectangle(centerX + buttonWidth/1.8, buttonY - 20, buttonWidth, buttonHeight, 0xe74c3c)
+        // Кнопка SHORT (справа)
+        this.shortButton = this.add.rectangle(centerX + buttonWidth + buttonSpacing/2, buttonY - 25, buttonWidth, buttonHeight, 0xe74c3c)
             .setInteractive();
-        this.add.text(centerX + buttonWidth/1.8, buttonY - 20, 'SHORT', {
+        this.add.text(centerX + buttonWidth + buttonSpacing/2, buttonY - 25, 'SHORT', {
             fontSize: this.getAdaptiveFontSize(18),
             fill: '#FFFFFF',
             fontFamily: 'Arial',
             fontWeight: 'bold'
         }).setOrigin(0.5);
 
-        // Кнопка закрытия позиции
-        this.closeButton = this.add.rectangle(centerX, buttonY + 10, buttonWidth * 1.5, buttonHeight, 0xf39c12)
+        // Кнопка закрытия позиции (по центру между LONG и SHORT)
+        this.closeButton = this.add.rectangle(centerX, buttonY - 25, buttonWidth * 1.2, buttonHeight, 0xf39c12)
             .setInteractive();
-        this.add.text(centerX, buttonY + 10, 'ЗАКРЫТЬ ПОЗИЦИЮ', {
+        this.add.text(centerX, buttonY - 25, 'ЗАКРЫТЬ', {
             fontSize: this.getAdaptiveFontSize(16),
             fill: '#FFFFFF',
             fontFamily: 'Arial',
             fontWeight: 'bold'
         }).setOrigin(0.5);
 
-        // Кнопка стоп-ордеров
+        // Кнопка стоп-ордеров (ниже основных кнопок)
         const stopButtonWidth = this.getAdaptiveSize(200);
         const stopButtonHeight = this.getAdaptiveSize(40);
-        this.stopButton = this.add.rectangle(centerX, buttonY + 40, stopButtonWidth, stopButtonHeight, 0x9b59b6)
+        this.stopButton = this.add.rectangle(centerX, buttonY + 15, stopButtonWidth, stopButtonHeight, 0x9b59b6)
             .setInteractive();
-        this.add.text(centerX, buttonY + 40, 'СТОП-ОРДЕР', {
+        this.add.text(centerX, buttonY + 15, 'СТОП-ОРДЕР', {
             fontSize: this.getAdaptiveFontSize(16),
             fill: '#FFFFFF',
-            fontFamily: 'Arial'
+            fontFamily: 'Arial',
+            fontWeight: 'bold'
         }).setOrigin(0.5);
 
-        // Информация о позиции
-        this.positionInfo = this.add.text(centerX, buttonY - 5, '', {
+        // Информация о позиции (над кнопками)
+        this.positionInfo = this.add.text(centerX, buttonY - 55, '', {
             fontSize: this.getAdaptiveFontSize(12),
             fill: '#2c3e50',
             fontFamily: 'Arial',
@@ -273,7 +269,6 @@ class GameScene extends Phaser.Scene {
         this.stopButton.on('pointerdown', () => this.setStopOrder());
     }
 
-    // ОТКРЫТИЕ LONG ПОЗИЦИИ (покупка)
     openLong() {
         if (this.hasPosition) return;
         
@@ -293,7 +288,6 @@ class GameScene extends Phaser.Scene {
         }
     }
 
-    // ОТКРЫТИЕ SHORT ПОЗИЦИИ (продажа)
     openShort() {
         if (this.hasPosition) return;
         
@@ -304,7 +298,6 @@ class GameScene extends Phaser.Scene {
                 entryPrice: this.currentCurrency.price,
                 coins: coinsToSell
             };
-            // В шорте мы занимаем монеты и сразу продаем их
             this.balance += coinsToSell * this.currentCurrency.price;
             
             this.updateUI();
@@ -314,18 +307,15 @@ class GameScene extends Phaser.Scene {
         }
     }
 
-    // ЗАКРЫТИЕ ПОЗИЦИИ
     closePosition() {
         if (!this.hasPosition) return;
         
         let profit = 0;
         
         if (this.position.type === 'long') {
-            // Продаем купленные монеты
             profit = (this.currentCurrency.price - this.position.entryPrice) * this.position.coins;
             this.balance += this.position.coins * this.currentCurrency.price;
         } else {
-            // Покупаем монеты обратно чтобы вернуть долг
             profit = (this.position.entryPrice - this.currentCurrency.price) * this.position.coins;
             this.balance -= this.position.coins * this.currentCurrency.price;
         }
@@ -348,7 +338,6 @@ class GameScene extends Phaser.Scene {
         this.showMessage(`${positionType} позиция закрыта! Прибыль: $${profit.toFixed(2)}`);
     }
 
-    // РАСЧЕТ ТЕКУЩЕЙ ПРИБЫЛИ
     calculateCurrentProfit() {
         if (!this.hasPosition) return 0;
         
@@ -359,7 +348,6 @@ class GameScene extends Phaser.Scene {
         }
     }
 
-    // РАСЧЕТ ПРОЦЕНТА ПРИБЫЛИ
     calculateProfitPercent() {
         if (!this.hasPosition) return 0;
         
@@ -461,7 +449,7 @@ class GameScene extends Phaser.Scene {
         
         this.chart.strokePath();
         
-        // ВИЗУАЛИЗАЦИЯ ПОЗИЦИЙ И ОРДЕРОВ
+        // ВИЗУАЛИЗАЦИЯ ПОЗИЦИЙ И ОРДЕРОВ (ВЕРНУЛИ ИНДИКАТОРЫ)
         if (this.hasPosition) {
             this.drawPositionMarkers(minPrice, maxPrice, startY, chartHeight, range, chartWidth);
         }
@@ -471,8 +459,13 @@ class GameScene extends Phaser.Scene {
         // Маркер цены входа
         const entryY = startY + height - ((this.position.entryPrice - minPrice) / range) * height;
         
-        // Цвет маркера в зависимости от типа позиции
         const positionColor = this.position.type === 'long' ? 0x27ae60 : 0xe74c3c;
+        
+        // Пунктирная линия цены входа через весь график
+        this.ordersGraphics.lineStyle(2, positionColor, 0.6);
+        this.drawDashedLine(this.ordersGraphics, 
+            this.layout.padding, entryY, 
+            this.layout.padding + width, entryY, 8, 4);
         
         // Маркер точки входа
         this.ordersGraphics.fillStyle(positionColor, 1);
@@ -528,6 +521,29 @@ class GameScene extends Phaser.Scene {
                 fontFamily: 'Arial',
                 fontWeight: 'bold'
             });
+        }
+    }
+
+    // Функция для рисования пунктирных линий
+    drawDashedLine(graphics, x1, y1, x2, y2, dashLength, gapLength) {
+        const distance = Phaser.Math.Distance.Between(x1, y1, x2, y2);
+        const dashTotal = dashLength + gapLength;
+        const dashes = Math.floor(distance / dashTotal);
+        const remainder = distance % dashTotal;
+        
+        let currentX = x1;
+        let currentY = y1;
+        
+        for (let i = 0; i < dashes; i++) {
+            const dashProgress = (i * dashTotal) / distance;
+            const nextDashProgress = ((i * dashTotal) + dashLength) / distance;
+            
+            const dashX1 = Phaser.Math.Interpolation.Linear([x1, x2], dashProgress);
+            const dashY1 = Phaser.Math.Interpolation.Linear([y1, y2], dashProgress);
+            const dashX2 = Phaser.Math.Interpolation.Linear([x1, x2], nextDashProgress);
+            const dashY2 = Phaser.Math.Interpolation.Linear([y1, y2], nextDashProgress);
+            
+            graphics.lineBetween(dashX1, dashY1, dashX2, dashY2);
         }
     }
 
@@ -598,7 +614,6 @@ class GameScene extends Phaser.Scene {
         });
     }
 
-    // Остальные методы остаются без изменений
     switchCurrency(direction) {
         if (this.hasPosition) return;
         
@@ -692,7 +707,6 @@ class GameScene extends Phaser.Scene {
     }
 }
 
-// Конфигурация Phaser остается без изменений
 const config = {
     type: Phaser.AUTO,
     width: window.innerWidth,
