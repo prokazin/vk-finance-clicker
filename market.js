@@ -1,4 +1,4 @@
-// Эмулятор VK Bridge для тестирования вне VK
+// Эмулятор VK Bridge для тестирования вне V
 if (typeof VK === 'undefined') {
     window.VK = {
         init: function(callback) {
