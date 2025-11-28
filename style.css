@@ -11,15 +11,26 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 5px;
+    padding: 10px;
 }
 
 #game-container {
     width: 100%;
     max-width: 400px;
-    height: 570px;
+    height: 600px;
     background: white;
-    border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
     overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Улучшение для мобильных */
+@media (max-height: 700px) {
+    #game-container {
+        height: 100vh;
+        border-radius: 0;
+        max-width: 100%;
+    }
 }
