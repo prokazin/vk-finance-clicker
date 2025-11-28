@@ -1,26 +1,83 @@
-:root{
-  --bg:#0b1220; --card:#0f1724; --muted:#99a6b3; --accent:#1db954; --danger:#ff4d4f; --glass:rgba(255,255,255,0.03);
-  --text:#e6eef6;
+body {
+    margin: 0;
+    background: #0e0e0e;
+    color: #fff;
+    font-family: Arial;
 }
-*{box-sizing:border-box}
-body{margin:0;font-family:Inter,Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
-.app{max-width:1200px;margin:12px auto;padding:12px}
-header{display:flex;justify-content:space-between;align-items:center}
-.top-right{display:flex;gap:14px}
-main{display:flex;gap:12px;margin-top:12px}
-.left{width:320px}
-.center{flex:1}
-.right{width:300px}
-.card{background:var(--card);padding:12px;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,0.5);margin-bottom:12px}
-.row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
-.primary{background:linear-gradient(90deg,var(--accent),#19a84a);border:0;padding:8px 12px;border-radius:8px;color:#001}
-.danger{background:linear-gradient(90deg,var(--danger),#ff7373);border:0;padding:8px 12px;border-radius:8px;color:#001}
-.muted{color:var(--muted);font-size:13px}
-.small{font-size:12px}
-#chartContainer{height:440px}
-#chartToolbar{display:flex;gap:10px;align-items:center;margin-bottom:8px}
-ul{padding-left:12px;margin:0}
-ol{padding-left:12px;margin:0}
-input[type=number],select{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--text)}
-footer{margin-top:8px;color:var(--muted);font-size:12px;text-align:center}
-@media(max-width:1000px){main{flex-direction:column}.left,.right{width:auto}}
+
+.top {
+    background: #1a1a1a;
+    padding: 12px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.balance p {
+    margin: 3px 0;
+}
+
+.click-btn {
+    background: #ffc400;
+    padding: 10px 15px;
+    border-radius: 8px;
+    border: none;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.tabs {
+    display: flex;
+}
+
+.tab {
+    flex: 1;
+    padding: 12px;
+    background: #1a1a1a;
+    border: none;
+    color: #aaa;
+    font-size: 16px;
+}
+
+.tab.active {
+    background: #262626;
+    color: #fff;
+    font-weight: bold;
+}
+
+.tab-content { display: none; padding: 15px; }
+.tab-content.active { display: block; }
+
+.chart {
+    height: 350px;
+    margin-top: 10px;
+    border-radius: 8px;
+}
+
+.asset-select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    background: #222;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+}
+
+.buy { background:#0f0; padding:10px; margin-right:10px; border:none; }
+.sell { background:#f00; padding:10px; border:none; }
+
+.net-status { margin-top: 8px; color: #aaa; }
+
+#positions div {
+    background:#222;
+    padding:8px;
+    margin:5px 0;
+    border-radius:6px;
+}
+
+#depositList div {
+    background:#222;
+    padding:8px;
+    margin:5px 0;
+    border-radius:6px;
+}
