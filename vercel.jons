@@ -6,6 +6,10 @@
         {
           "key": "X-Frame-Options",
           "value": "ALLOW-FROM https://vk.com"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "frame-ancestors https://vk.com"
         }
       ]
     }
