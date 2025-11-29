@@ -21,6 +21,7 @@ class GameScene extends Phaser.Scene {
         this.currentTimeframeIndex = 0;
         
         this.priceUpdateTimer = null;
+        this.showStatsPanel = false; // 🔥 ДОБАВЛЕНО: Флаг для панели статистики
         
         // Crypto.com Modern Colors - refined
         this.colors = {
@@ -68,7 +69,10 @@ class GameScene extends Phaser.Scene {
         this.stats = {
             totalTrades: 0,
             successfulTrades: 0,
-            totalProfit: 0
+            totalProfit: 0,
+            bestTrade: 0,
+            worstTrade: 0,
+            currentStreak: 0
         };
 
         this.layout = {
@@ -149,6 +153,9 @@ class GameScene extends Phaser.Scene {
         // ACTION BUTTONS
         this.createActionSection(centerX, buttonY, width);
 
+        // 🔥 ДОБАВЛЕНО: Панель статистики (скрыта по умолчанию)
+        this.createStatsPanel();
+
         this.updateButtonStates();
         this.updatePositionInfo();
     }
@@ -218,13 +225,101 @@ class GameScene extends Phaser.Scene {
             letterSpacing: 1
         });
 
-        // Stats
-        this.statsText = this.add.text(width - this.layout.padding - 16, chartY - this.layout.chartHeight/2 + 20, this.getStatsString(), {
-            fontSize: '12px',
+        // 🔥 ИЗМЕНЕНО: Улучшенная статистика
+        this.statsButton = this.createRoundedButton(width - this.layout.padding - 80, chartY - this.layout.chartHeight/2 + 20, 120, 24, '📊 STATS', this.colors.secondary);
+        this.statsButton.setAlpha(0.8);
+
+        // Price levels display
+        this.priceLevelsText = this.add.text(this.layout.padding + 16, chartY + this.layout.chartHeight/2 - 40, '', {
+            fontSize: '11px',
             fill: this.hexToColor(this.colors.textSecondary),
             fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
             fontWeight: '400'
-        }).setOrigin(1, 0);
+        });
+    }
+
+    // 🔥 ДОБАВЛЕНО: Панель расширенной статистики
+    createStatsPanel() {
+        const { width, height } = this.cameras.main;
+        
+        // Фон панели
+        this.statsPanel = this.add.rectangle(width / 2, height / 2, width * 0.9, height * 0.7, this.colors.card)
+            .setStrokeStyle(2, this.colors.border)
+            .setAlpha(0)
+            .setDepth(10);
+        
+        // Заголовок
+        this.statsTitle = this.add.text(width / 2, height / 2 - height * 0.3, 'DETAILED STATISTICS', {
+            fontSize: '18px',
+            fill: this.hexToColor(this.colors.textPrimary),
+            fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont',
+            fontWeight: '700'
+        }).setOrigin(0.5).setAlpha(0).setDepth(11);
+        
+        // Статистика
+        this.detailedStatsText = this.add.text(width / 2, height / 2, '', {
+            fontSize: '14px',
+            fill: this.hexToColor(this.colors.textPrimary),
+            fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
+            fontWeight: '400',
+            lineSpacing: 8,
+            align: 'center'
+        }).setOrigin(0.5).setAlpha(0).setDepth(11);
+        
+        // Кнопка закрытия
+        this.closeStatsButton = this.createRoundedButton(width / 2, height / 2 + height * 0.3, 120, 40, 'CLOSE', this.colors.primary)
+            .setAlpha(0)
+            .setDepth(11);
+        
+        this.closeStatsButton.on('pointerdown', () => this.toggleStatsPanel());
+    }
+
+    // 🔥 ДОБАВЛЕНО: Переключение панели статистики
+    toggleStatsPanel() {
+        this.showStatsPanel = !this.showStatsPanel;
+        
+        if (this.showStatsPanel) {
+            this.updateDetailedStats();
+            
+            // Плавное появление
+            this.tweens.add({
+                targets: [this.statsPanel, this.statsTitle, this.detailedStatsText, this.closeStatsButton],
+                alpha: 1,
+                duration: 300,
+                ease: 'Power2'
+            });
+        } else {
+            // Плавное исчезновение
+            this.tweens.add({
+                targets: [this.statsPanel, this.statsTitle, this.detailedStatsText, this.closeStatsButton],
+                alpha: 0,
+                duration: 300,
+                ease: 'Power2'
+            });
+        }
+    }
+
+    // 🔥 ДОБАВЛЕНО: Обновление детальной статистики
+    updateDetailedStats() {
+        const winRate = this.stats.totalTrades > 0 ? 
+            (this.stats.successfulTrades / this.stats.totalTrades * 100).toFixed(1) : '0.0';
+        
+        const avgProfit = this.stats.totalTrades > 0 ? 
+            (this.stats.totalProfit / this.stats.totalTrades).toFixed(2) : '0.00';
+        
+        const statsData = [
+            `Total Trades: ${this.stats.totalTrades}`,
+            `Successful Trades: ${this.stats.successfulTrades}`,
+            `Win Rate: ${winRate}%`,
+            `Total P&L: $${this.stats.totalProfit.toFixed(2)}`,
+            `Average P&L: $${avgProfit}`,
+            `Best Trade: $${this.stats.bestTrade.toFixed(2)}`,
+            `Worst Trade: $${this.stats.worstTrade.toFixed(2)}`,
+            `Current Streak: ${this.stats.currentStreak}`,
+            `Max Leverage Used: ${this.leverage}x`
+        ];
+        
+        this.detailedStatsText.setText(statsData.join('\n'));
     }
 
     createActionSection(centerX, buttonY, width) {
@@ -295,11 +390,32 @@ class GameScene extends Phaser.Scene {
 
     createRoundedButton(x, y, width, height, text, color) {
         const button = this.add.rectangle(x, y, width, height, color)
-            .setInteractive();
+            .setInteractive({ useHandCursor: true });
+        
+        // 🔥 ДОБАВЛЕНО: Плавные анимации кнопок
+        button.on('pointerover', () => {
+            this.tweens.add({
+                targets: button,
+                scaleX: 1.05,
+                scaleY: 1.05,
+                duration: 150,
+                ease: 'Power2'
+            });
+        });
+        
+        button.on('pointerout', () => {
+            this.tweens.add({
+                targets: button,
+                scaleX: 1,
+                scaleY: 1,
+                duration: 150,
+                ease: 'Power2'
+            });
+        });
         
         const textColor = (color === this.colors.success || color === this.colors.primary) ? '#0D1421' : '#FFFFFF';
         
-        this.add.text(x, y, text, {
+        const buttonText = this.add.text(x, y, text, {
             fontSize: width < 150 ? '14px' : '16px',
             fill: textColor,
             fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont',
@@ -327,6 +443,7 @@ class GameScene extends Phaser.Scene {
         this.leverageUpButton.on('pointerdown', () => this.changeLeverage(1));
         this.timeframePrevButton.on('pointerdown', () => this.changeTimeframe(-1));
         this.timeframeNextButton.on('pointerdown', () => this.changeTimeframe(1));
+        this.statsButton.on('pointerdown', () => this.toggleStatsPanel());
     }
 
     // 🔥 ДОБАВЛЕНО: Запуск обновления цены по таймфрейму
@@ -343,7 +460,7 @@ class GameScene extends Phaser.Scene {
         });
     }
 
-    // 🔥 ИЗМЕНЕНО: Более реалистичная симуляция цены
+    // 🔥 ИЗМЕНЕНО: Более плавное обновление цены
     updatePrice() {
         const currency = this.currentCurrency;
         
@@ -354,18 +471,27 @@ class GameScene extends Phaser.Scene {
         
         // Формула GBM для более реалистичного движения
         const priceChange = Math.exp(drift + randomShock);
-        currency.price *= priceChange;
-        currency.price = Math.max(currency.price, 0.01); // Защита от отрицательных цен
+        const newPrice = currency.price * priceChange;
         
-        currency.history.push(currency.price);
-        if (currency.history.length > this.currentTimeframe.points) {
-            currency.history.shift();
-        }
-        
-        this.priceText.setText(`$${currency.price.toFixed(2)}`);
-        this.checkStopOrders();
-        this.updateChart();
-        this.updateUI();
+        // 🔥 ДОБАВЛЕНО: Плавная анимация изменения цены
+        this.tweens.add({
+            targets: currency,
+            price: Math.max(newPrice, 0.01),
+            duration: 500,
+            ease: 'Power1',
+            onUpdate: () => {
+                this.priceText.setText(`$${currency.price.toFixed(2)}`);
+            },
+            onComplete: () => {
+                currency.history.push(currency.price);
+                if (currency.history.length > this.currentTimeframe.points) {
+                    currency.history.shift();
+                }
+                this.checkStopOrders();
+                this.updateChart();
+                this.updateUI();
+            }
+        });
     }
 
     // 🔥 ДОБАВЛЕНО: Изменение кредитного плеча
@@ -411,7 +537,7 @@ class GameScene extends Phaser.Scene {
         this.showMessage(`Timeframe: ${this.currentTimeframe.name}`, this.colors.primary);
     }
 
-    // 🔥 ИЗМЕНЕНО: Открытие позиции с учетом плеча
+    // 🔥 ИЗМЕНЕНО: Открытие позиции с учетом плеча и анимацией
     async openLong() {
         if (this.hasPosition) return;
         
@@ -428,6 +554,9 @@ class GameScene extends Phaser.Scene {
             };
             this.balance -= this.position.invested;
             
+            // 🔥 ДОБАВЛЕНО: Анимация открытия позиции
+            this.animateButton(this.longButton);
+            
             this.updateUI();
             this.updateChart();
             await this.saveGameData();
@@ -435,7 +564,7 @@ class GameScene extends Phaser.Scene {
         }
     }
 
-    // 🔥 ИЗМЕНЕНО: Открытие шорта с учетом плеча
+    // 🔥 ИЗМЕНЕНО: Открытие шорта с учетом плеча и анимацией
     async openShort() {
         if (this.hasPosition) return;
         
@@ -450,14 +579,29 @@ class GameScene extends Phaser.Scene {
                 leverage: this.leverage,
                 invested: coinsToSell * this.currentCurrency.price / this.leverage
             };
-            this.balance += coinsToSell * this.currentCurrency.price; // Получаем средства от продажи
-            this.balance -= this.position.invested; // Вычитаем залоговые средства
+            this.balance += coinsToSell * this.currentCurrency.price;
+            this.balance -= this.position.invested;
+            
+            // 🔥 ДОБАВЛЕНО: Анимация открытия позиции
+            this.animateButton(this.shortButton);
             
             this.updateUI();
             this.updateChart();
             await this.saveGameData();
             this.showMessage(`SHORT ${this.leverage}x at $${this.position.entryPrice.toFixed(2)}`, this.colors.danger);
         }
+    }
+
+    // 🔥 ДОБАВЛЕНО: Анимация кнопок
+    animateButton(button) {
+        this.tweens.add({
+            targets: button,
+            scaleX: 1.2,
+            scaleY: 1.2,
+            duration: 100,
+            yoyo: true,
+            ease: 'Power2'
+        });
     }
 
     // 🔥 ИЗМЕНЕНО: Закрытие позиции с учетом плеча
@@ -476,15 +620,24 @@ class GameScene extends Phaser.Scene {
             this.balance += this.position.invested + profit;
         }
         
+        // 🔥 ДОБАВЛЕНО: Обновление статистики
+        this.updateTradeStats(profit);
+        
         this.stats.totalTrades++;
         if (profit > 0) {
             this.stats.successfulTrades++;
+            this.stats.currentStreak = Math.max(this.stats.currentStreak + 1, 1);
+        } else {
+            this.stats.currentStreak = Math.min(this.stats.currentStreak - 1, -1);
         }
         this.stats.totalProfit += profit;
         
         this.position = null;
         this.stopLoss = 0;
         this.takeProfit = 0;
+        
+        // 🔥 ДОБАВЛЕНО: Анимация закрытия
+        this.animateButton(this.closeButton);
         
         this.updateUI();
         this.updateChart();
@@ -493,6 +646,16 @@ class GameScene extends Phaser.Scene {
         const color = profit >= 0 ? this.colors.success : this.colors.danger;
         const leverageText = this.position ? ` (${this.position.leverage}x)` : '';
         this.showMessage(`Position closed${leverageText}! P&L: $${profit.toFixed(2)}`, color);
+    }
+
+    // 🔥 ДОБАВЛЕНО: Обновление статистики сделок
+    updateTradeStats(profit) {
+        if (profit > this.stats.bestTrade) {
+            this.stats.bestTrade = profit;
+        }
+        if (profit < this.stats.worstTrade) {
+            this.stats.worstTrade = profit;
+        }
     }
 
     calculateCurrentProfit() {
@@ -556,6 +719,7 @@ class GameScene extends Phaser.Scene {
         }
     }
 
+    // 🔥 ИЗМЕНЕНО: Адаптивный график с автоматическим масштабированием
     updateChart() {
         this.chart.clear();
         this.ordersGraphics.clear();
@@ -569,13 +733,18 @@ class GameScene extends Phaser.Scene {
         const history = this.currentCurrency.history;
         if (history.length < 2) return;
         
-        const minPrice = Math.min(...history);
-        const maxPrice = Math.max(...history);
+        // 🔥 ИЗМЕНЕНО: Автоматическое масштабирование с запасом
+        const minPrice = Math.min(...history) * 0.98; // 2% запас снизу
+        const maxPrice = Math.max(...history) * 1.02; // 2% запас сверху
         const range = maxPrice - minPrice || 1;
+        
+        // 🔥 ДОБАВЛЕНО: Отображение уровней цены
+        this.updatePriceLevels(minPrice, maxPrice, startY, chartHeight, range);
         
         // Clean chart line
         this.chart.lineStyle(3, this.currentCurrency.color, 1);
         
+        // 🔥 ИЗМЕНЕНО: Более плавное отображение линии
         for (let i = 0; i < history.length - 1; i++) {
             const x1 = startX + (i / (history.length - 1)) * chartWidth;
             const y1 = startY + chartHeight - ((history[i] - minPrice) / range) * chartHeight;
@@ -591,6 +760,23 @@ class GameScene extends Phaser.Scene {
         if (this.hasPosition) {
             this.drawPositionMarkers(minPrice, maxPrice, startY, chartHeight, range, chartWidth, startX);
         }
+    }
+
+    // 🔥 ДОБАВЛЕНО: Отображение уровней цены на графике
+    updatePriceLevels(minPrice, maxPrice, startY, chartHeight, range) {
+        const levels = [
+            { price: maxPrice, label: `High: $${maxPrice.toFixed(2)}` },
+            { price: (maxPrice + minPrice) / 2, label: `Mid: $${((maxPrice + minPrice) / 2).toFixed(2)}` },
+            { price: minPrice, label: `Low: $${minPrice.toFixed(2)}` }
+        ];
+        
+        let levelsText = '';
+        levels.forEach(level => {
+            const y = startY + chartHeight - ((level.price - minPrice) / range) * chartHeight;
+            levelsText += `${level.label}\n`;
+        });
+        
+        this.priceLevelsText.setText(levelsText);
     }
 
     drawPositionMarkers(minPrice, maxPrice, startY, height, range, width, startX) {
@@ -736,10 +922,12 @@ class GameScene extends Phaser.Scene {
             fontWeight: '600'
         }).setOrigin(0.5);
         
+        // 🔥 ИЗМЕНЕНО: Более плавная анимация сообщений
         this.tweens.add({
             targets: [messageBg, message],
             alpha: 0,
             duration: 2000,
+            ease: 'Power2',
             onComplete: () => {
                 messageBg.destroy();
                 message.destroy();
