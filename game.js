@@ -26,7 +26,7 @@ class GameScene extends Phaser.Scene {
 
         this.currencies = [
             { 
-                name: 'VKoin', 
+                name: 'Bitcoin', 
                 price: 100, 
                 history: [], 
                 color: 0x00D2FF, 
@@ -34,7 +34,7 @@ class GameScene extends Phaser.Scene {
                 icon: '●'
             },
             { 
-                name: 'Memecoin', 
+                name: 'Ethereum', 
                 price: 50, 
                 history: [], 
                 color: 0xFF5476, 
@@ -42,7 +42,7 @@ class GameScene extends Phaser.Scene {
                 icon: '◆'
             },
             { 
-                name: 'Social Token', 
+                name: 'Litecoin', 
                 price: 200, 
                 history: [], 
                 color: 0x00F0A5, 
@@ -74,7 +74,7 @@ class GameScene extends Phaser.Scene {
         return this.position !== null;
     }
 
-    async create() {
+    create() {
         this.calculateLayout();
         
         // Clean dark background
@@ -88,8 +88,8 @@ class GameScene extends Phaser.Scene {
             }
         });
 
-        // Загружаем сохраненные данные ПЕРЕД созданием UI
-        await this.loadGameData();
+        // Загружаем сохраненные данные из localStorage
+        this.loadGameData();
 
         this.createUI();
         this.createChart();
@@ -102,7 +102,7 @@ class GameScene extends Phaser.Scene {
             loop: true
         });
 
-        console.log('🚀 VK Trading App Started');
+        console.log('🚀 Crypto Trading Game Started');
     }
 
     calculateLayout() {
@@ -149,7 +149,7 @@ class GameScene extends Phaser.Scene {
         this.currencyIcon = this.add.text(centerX, headerY - 25, this.currentCurrency.icon, {
             fontSize: '28px',
             fill: this.hexToColor(this.currentCurrency.color),
-            fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont',
+            fontFamily: 'Arial, sans-serif',
             fontWeight: '600'
         }).setOrigin(0.5);
 
@@ -157,7 +157,7 @@ class GameScene extends Phaser.Scene {
         this.currencyText = this.add.text(centerX, headerY, this.currentCurrency.name, {
             fontSize: '16px',
             fill: this.hexToColor(this.colors.textSecondary),
-            fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
+            fontFamily: 'Arial, sans-serif',
             fontWeight: '400'
         }).setOrigin(0.5);
 
@@ -165,7 +165,7 @@ class GameScene extends Phaser.Scene {
         this.priceText = this.add.text(centerX, headerY + 25, `$${this.currentCurrency.price.toFixed(2)}`, {
             fontSize: '32px',
             fill: this.hexToColor(this.colors.textPrimary),
-            fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont',
+            fontFamily: 'Arial, sans-serif',
             fontWeight: '700'
         }).setOrigin(0.5);
 
@@ -173,7 +173,7 @@ class GameScene extends Phaser.Scene {
         this.balanceText = this.add.text(centerX, headerY + 55, `Balance: $${this.balance.toFixed(2)}`, {
             fontSize: '14px',
             fill: this.hexToColor(this.colors.textSecondary),
-            fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
+            fontFamily: 'Arial, sans-serif',
             fontWeight: '400'
         }).setOrigin(0.5);
 
@@ -192,7 +192,7 @@ class GameScene extends Phaser.Scene {
         this.chartTitle = this.add.text(this.layout.padding + 16, chartY - this.layout.chartHeight/2 + 20, 'PRICE CHART', {
             fontSize: '12px',
             fill: this.hexToColor(this.colors.textSecondary),
-            fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
+            fontFamily: 'Arial, sans-serif',
             fontWeight: '600',
             letterSpacing: 1
         });
@@ -201,7 +201,7 @@ class GameScene extends Phaser.Scene {
         this.statsText = this.add.text(width - this.layout.padding - 16, chartY - this.layout.chartHeight/2 + 20, this.getStatsString(), {
             fontSize: '12px',
             fill: this.hexToColor(this.colors.textSecondary),
-            fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
+            fontFamily: 'Arial, sans-serif',
             fontWeight: '400'
         }).setOrigin(1, 0);
     }
@@ -223,14 +223,14 @@ class GameScene extends Phaser.Scene {
         this.positionInfo = this.add.text(centerX, buttonY - 65, 'No active position', {
             fontSize: '13px',
             fill: this.hexToColor(this.colors.textSecondary),
-            fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
+            fontFamily: 'Arial, sans-serif',
             fontWeight: '400'
         }).setOrigin(0.5);
 
         // Profit/Loss display
         this.profitText = this.add.text(centerX, buttonY - 40, '', {
             fontSize: '18px',
-            fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont',
+            fontFamily: 'Arial, sans-serif',
             fontWeight: '700'
         }).setOrigin(0.5);
 
@@ -246,8 +246,7 @@ class GameScene extends Phaser.Scene {
         const stopButtonWidth = isMobile ? 180 : 200;
         this.stopButton = this.createRoundedButton(centerX, buttonY + 35, stopButtonWidth, 46, 'STOP ORDER', this.colors.secondary);
 
-        // Share button for VK
-        this.shareButton = this.createRoundedButton(width - this.layout.padding - 50, buttonY + 35, 90, 36, 'SHARE', this.colors.warning);
+        // Убрана кнопка SHARE
     }
 
     createRoundedButton(x, y, width, height, text, color) {
@@ -259,7 +258,7 @@ class GameScene extends Phaser.Scene {
         this.add.text(x, y, text, {
             fontSize: width < 150 ? '14px' : '16px',
             fill: textColor,
-            fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont',
+            fontFamily: 'Arial, sans-serif',
             fontWeight: '700'
         }).setOrigin(0.5);
         
@@ -277,7 +276,7 @@ class GameScene extends Phaser.Scene {
         this.shortButton.on('pointerdown', () => this.openShort());
         this.closeButton.on('pointerdown', () => this.closePosition());
         this.stopButton.on('pointerdown', () => this.setStopOrder());
-        this.shareButton.on('pointerdown', () => this.shareResults());
+        // Убрана кнопка share
     }
 
     async openLong() {
@@ -294,7 +293,7 @@ class GameScene extends Phaser.Scene {
             
             this.updateUI();
             this.updateChart();
-            await this.saveGameData();
+            this.saveGameData();
             this.showMessage(`LONG opened at $${this.position.entryPrice.toFixed(2)}`, this.colors.success);
         }
     }
@@ -313,7 +312,7 @@ class GameScene extends Phaser.Scene {
             
             this.updateUI();
             this.updateChart();
-            await this.saveGameData();
+            this.saveGameData();
             this.showMessage(`SHORT opened at $${this.position.entryPrice.toFixed(2)}`, this.colors.danger);
         }
     }
@@ -343,7 +342,7 @@ class GameScene extends Phaser.Scene {
         
         this.updateUI();
         this.updateChart();
-        await this.saveGameData();
+        this.saveGameData();
         
         const color = profit >= 0 ? this.colors.success : this.colors.danger;
         this.showMessage(`Position closed! P&L: $${profit.toFixed(2)}`, color);
@@ -382,7 +381,7 @@ class GameScene extends Phaser.Scene {
         
         this.updateUI();
         this.updateChart();
-        await this.saveGameData();
+        this.saveGameData();
         this.showMessage('Stop orders set', this.colors.secondary);
     }
 
@@ -486,7 +485,7 @@ class GameScene extends Phaser.Scene {
         this.add.text(startX + width + 16, entryY - 8, `${positionText} $${this.position.entryPrice.toFixed(2)}`, { 
             fontSize: '9px',
             fill: '#0D1421',
-            fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
+            fontFamily: 'Arial, sans-serif',
             fontWeight: '600'
         });
 
@@ -503,7 +502,7 @@ class GameScene extends Phaser.Scene {
             this.add.text(startX + 8, stopY - 7, `SL $${this.stopLoss.toFixed(2)}`, { 
                 fontSize: '8px',
                 fill: '#FFFFFF',
-                fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
+                fontFamily: 'Arial, sans-serif',
                 fontWeight: '600'
             });
         }
@@ -521,7 +520,7 @@ class GameScene extends Phaser.Scene {
             this.add.text(startX + 8, profitY - 7, `TP $${this.takeProfit.toFixed(2)}`, { 
                 fontSize: '8px',
                 fill: '#0D1421',
-                fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
+                fontFamily: 'Arial, sans-serif',
                 fontWeight: '600'
             });
         }
@@ -604,7 +603,7 @@ class GameScene extends Phaser.Scene {
         const message = this.add.text(centerX, messageY, text, {
             fontSize: '14px',
             fill: '#0D1421',
-            fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont',
+            fontFamily: 'Arial, sans-serif',
             fontWeight: '600'
         }).setOrigin(0.5);
         
@@ -637,85 +636,55 @@ class GameScene extends Phaser.Scene {
         this.updateUI();
     }
 
-    // 🔥 ВК ИНТЕГРАЦИЯ И СОХРАНЕНИЕ
-    async loadGameData() {
+    // 🔥 СОХРАНЕНИЕ В LOCALSTORAGE
+    loadGameData() {
         try {
-            if (window.VK) {
-                console.log('📥 Loading data from VK...');
-                const data = await VK.call('storage.get', { 
-                    keys: ['balance', 'position', 'stats', 'stopLoss', 'takeProfit'] 
-                });
-                
-                if (data.balance) {
-                    this.balance = parseFloat(data.balance);
-                    console.log('✅ Balance loaded:', this.balance);
-                }
-                if (data.position && data.position !== 'null') {
-                    this.position = JSON.parse(data.position);
-                    console.log('✅ Position loaded:', this.position);
-                }
-                if (data.stats) {
-                    this.stats = JSON.parse(data.stats);
-                    console.log('✅ Stats loaded:', this.stats);
-                }
-                if (data.stopLoss) {
-                    this.stopLoss = parseFloat(data.stopLoss);
-                }
-                if (data.takeProfit) {
-                    this.takeProfit = parseFloat(data.takeProfit);
-                }
-            } else {
-                console.log('⚠️ VK not available, using default data');
+            console.log('📥 Loading data from localStorage...');
+            const balance = localStorage.getItem('trading_balance');
+            const position = localStorage.getItem('trading_position');
+            const stats = localStorage.getItem('trading_stats');
+            const stopLoss = localStorage.getItem('trading_stopLoss');
+            const takeProfit = localStorage.getItem('trading_takeProfit');
+            
+            if (balance) {
+                this.balance = parseFloat(balance);
+                console.log('✅ Balance loaded:', this.balance);
+            }
+            if (position && position !== 'null') {
+                this.position = JSON.parse(position);
+                console.log('✅ Position loaded:', this.position);
+            }
+            if (stats) {
+                this.stats = JSON.parse(stats);
+                console.log('✅ Stats loaded:', this.stats);
+            }
+            if (stopLoss) {
+                this.stopLoss = parseFloat(stopLoss);
+            }
+            if (takeProfit) {
+                this.takeProfit = parseFloat(takeProfit);
             }
         } catch (error) {
             console.log('❌ Failed to load data:', error);
         }
     }
 
-    async saveGameData() {
+    saveGameData() {
         try {
-            if (window.VK) {
-                console.log('💾 Saving data to VK...');
-                await VK.call('storage.set', {
-                    balance: this.balance.toString(),
-                    position: JSON.stringify(this.position),
-                    stats: JSON.stringify(this.stats),
-                    stopLoss: this.stopLoss.toString(),
-                    takeProfit: this.takeProfit.toString()
-                });
-                console.log('✅ Data saved successfully');
-            }
+            console.log('💾 Saving data to localStorage...');
+            localStorage.setItem('trading_balance', this.balance.toString());
+            localStorage.setItem('trading_position', JSON.stringify(this.position));
+            localStorage.setItem('trading_stats', JSON.stringify(this.stats));
+            localStorage.setItem('trading_stopLoss', this.stopLoss.toString());
+            localStorage.setItem('trading_takeProfit', this.takeProfit.toString());
+            console.log('✅ Data saved successfully');
         } catch (error) {
             console.log('❌ Failed to save data:', error);
         }
     }
-
-    async shareResults() {
-        try {
-            if (window.VK) {
-                const message = `🎯 My trading results:\n` +
-                               `Balance: $${this.balance.toFixed(2)}\n` +
-                               `Trades: ${this.stats.totalTrades}\n` +
-                               `Win Rate: ${this.stats.successfulTrades}\n` +
-                               `Total P&L: $${this.stats.totalProfit.toFixed(2)}\n\n` +
-                               `Try VKoin Trading! 🚀`;
-                
-                await VK.call('share', {
-                    title: 'VKoin Trading Results',
-                    text: message,
-                    link: 'https://vk.com/app51602325' // Замени на реальный ID приложения
-                });
-            } else {
-                this.showMessage('Share feature available in VK!', this.colors.warning);
-            }
-        } catch (error) {
-            console.log('Share failed:', error);
-            this.showMessage('Share to VK!', this.colors.warning);
-        }
-    }
 }
 
-// Конфигурация для VK
+// Конфигурация Phaser
 const config = {
     type: Phaser.AUTO,
     width: window.innerWidth,
@@ -733,28 +702,12 @@ const config = {
     }
 };
 
-// Инициализация VK Bridge
-window.addEventListener('DOMContentLoaded', async function() {
-    try {
-        // Инициализируем VK Bridge
-        if (window.VK) {
-            await VK.init();
-            console.log('✅ VK Bridge initialized');
-        }
-        
-        // Запускаем игру
-        setTimeout(() => {
-            const game = new Phaser.Game(config);
-            console.log('🎮 Phaser game started');
-            
-            window.addEventListener('resize', () => {
-                game.scale.refresh();
-            });
-            
-        }, 100);
-    } catch (error) {
-        console.error('❌ VK init failed:', error);
-        // Запускаем без VK
-        const game = new Phaser.Game(config);
-    }
+// Запуск игры
+window.addEventListener('DOMContentLoaded', function() {
+    const game = new Phaser.Game(config);
+    console.log('🎮 Phaser game started');
+    
+    window.addEventListener('resize', () => {
+        game.scale.refresh();
+    });
 });
