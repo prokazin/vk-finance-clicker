@@ -106,7 +106,7 @@ class GameScene extends Phaser.Scene {
         });
 
         // Загружаем сохраненные данные ПЕРЕД созданием UI
-        await this.loadGameData();
+        this.loadGameData();
 
         this.createUI();
         this.createChart();
@@ -118,43 +118,39 @@ class GameScene extends Phaser.Scene {
         console.log('🚀 VK Trading App Started');
     }
 
-    // 🔥 ДОБАВЛЕНО: Запуск обновления цены по таймфрейму
-    startPriceUpdates() {
-        if (this.priceUpdateTimer) {
-            this.priceUpdateTimer.remove();
-        }
-        
-        this.priceUpdateTimer = this.time.addEvent({
-            delay: this.currentTimeframe.interval,
-            callback: this.updatePrice,
-            callbackScope: this,
-            loop: true
-        });
+    calculateLayout() {
+        const { width, height } = this.cameras.main;
+        this.layout.padding = 24;
+        this.layout.headerHeight = Math.min(height * 0.22, 160);
+        this.layout.chartHeight = Math.min(height * 0.45, 300);
+        this.layout.buttonHeight = height - this.layout.headerHeight - this.layout.chartHeight;
     }
 
-    // 🔥 ИЗМЕНЕНО: Более реалистичная симуляция цены
-    updatePrice() {
-        const currency = this.currentCurrency;
-        
-        // Реалистичное движение цены (Geometric Brownian Motion)
-        const drift = 0.0002; // Небольшой дрейф вверх
-        const volatility = currency.volatility * (this.currentTimeframe.interval / 1000) * 0.01;
-        const randomShock = (Math.random() - 0.5) * volatility;
-        
-        // Формула GBM для более реалистичного движения
-        const priceChange = Math.exp(drift + randomShock);
-        currency.price *= priceChange;
-        currency.price = Math.max(currency.price, 0.01); // Защита от отрицательных цен
-        
-        currency.history.push(currency.price);
-        if (currency.history.length > this.currentTimeframe.points) {
-            currency.history.shift();
-        }
-        
-        this.priceText.setText(`$${currency.price.toFixed(2)}`);
-        this.checkStopOrders();
+    createChart() {
+        this.chart = this.add.graphics();
+        this.ordersGraphics = this.add.graphics();
         this.updateChart();
-        this.updateUI();
+    }
+
+    createUI() {
+        const { width, height } = this.cameras.main;
+        const centerX = width / 2;
+        
+        const headerY = this.layout.headerHeight / 2;
+        const chartY = this.layout.headerHeight + this.layout.chartHeight / 2;
+        const buttonY = this.layout.headerHeight + this.layout.chartHeight + this.layout.buttonHeight / 2;
+
+        // HEADER SECTION
+        this.createHeaderSection(centerX, headerY, width);
+
+        // CHART SECTION
+        this.createChartSection(centerX, chartY, width);
+
+        // ACTION BUTTONS
+        this.createActionSection(centerX, buttonY, width);
+
+        this.updateButtonStates();
+        this.updatePositionInfo();
     }
 
     createHeaderSection(centerX, headerY, width) {
@@ -208,14 +204,37 @@ class GameScene extends Phaser.Scene {
         this.nextButton = this.createRoundedButton(width - this.layout.padding - 35, headerY + 15, switchSize, switchSize, '→', this.colors.primary);
     }
 
+    createChartSection(centerX, chartY, width) {
+        // Chart container
+        this.chartCard = this.add.rectangle(centerX, chartY, width - this.layout.padding * 2, this.layout.chartHeight - 20, this.colors.card)
+            .setStrokeStyle(1, this.colors.border);
+
+        // Chart title
+        this.chartTitle = this.add.text(this.layout.padding + 16, chartY - this.layout.chartHeight/2 + 20, 'PRICE CHART', {
+            fontSize: '12px',
+            fill: this.hexToColor(this.colors.textSecondary),
+            fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
+            fontWeight: '600',
+            letterSpacing: 1
+        });
+
+        // Stats
+        this.statsText = this.add.text(width - this.layout.padding - 16, chartY - this.layout.chartHeight/2 + 20, this.getStatsString(), {
+            fontSize: '12px',
+            fill: this.hexToColor(this.colors.textSecondary),
+            fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
+            fontWeight: '400'
+        }).setOrigin(1, 0);
+    }
+
     createActionSection(centerX, buttonY, width) {
         const isMobile = width < 400;
         const buttonWidth = isMobile ? 140 : 160;
         const buttonHeight = 52;
         const buttonSpacing = isMobile ? 12 : 16;
 
-        // Action buttons container
-        this.buttonsCard = this.add.rectangle(centerX, buttonY - 10, width - this.layout.padding * 2, 180, this.colors.card) // Увеличена высота
+        // Action buttons container (увеличена высота для новых кнопок)
+        this.buttonsCard = this.add.rectangle(centerX, buttonY - 10, width - this.layout.padding * 2, 180, this.colors.card)
             .setStrokeStyle(1, this.colors.border);
 
         // Position info
@@ -274,6 +293,26 @@ class GameScene extends Phaser.Scene {
         this.shareButton = this.createRoundedButton(this.layout.padding + 50, buttonY + 80, 90, 36, 'SHARE', this.colors.warning);
     }
 
+    createRoundedButton(x, y, width, height, text, color) {
+        const button = this.add.rectangle(x, y, width, height, color)
+            .setInteractive();
+        
+        const textColor = (color === this.colors.success || color === this.colors.primary) ? '#0D1421' : '#FFFFFF';
+        
+        this.add.text(x, y, text, {
+            fontSize: width < 150 ? '14px' : '16px',
+            fill: textColor,
+            fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont',
+            fontWeight: '700'
+        }).setOrigin(0.5);
+        
+        return button;
+    }
+
+    hexToColor(hex) {
+        return '#' + hex.toString(16).padStart(6, '0');
+    }
+
     setupEventListeners() {
         this.prevButton.on('pointerdown', () => this.switchCurrency(-1));
         this.nextButton.on('pointerdown', () => this.switchCurrency(1));
@@ -288,6 +327,45 @@ class GameScene extends Phaser.Scene {
         this.leverageUpButton.on('pointerdown', () => this.changeLeverage(1));
         this.timeframePrevButton.on('pointerdown', () => this.changeTimeframe(-1));
         this.timeframeNextButton.on('pointerdown', () => this.changeTimeframe(1));
+    }
+
+    // 🔥 ДОБАВЛЕНО: Запуск обновления цены по таймфрейму
+    startPriceUpdates() {
+        if (this.priceUpdateTimer) {
+            this.priceUpdateTimer.remove();
+        }
+        
+        this.priceUpdateTimer = this.time.addEvent({
+            delay: this.currentTimeframe.interval,
+            callback: this.updatePrice,
+            callbackScope: this,
+            loop: true
+        });
+    }
+
+    // 🔥 ИЗМЕНЕНО: Более реалистичная симуляция цены
+    updatePrice() {
+        const currency = this.currentCurrency;
+        
+        // Реалистичное движение цены (Geometric Brownian Motion)
+        const drift = 0.0002; // Небольшой дрейф вверх
+        const volatility = currency.volatility * (this.currentTimeframe.interval / 1000) * 0.01;
+        const randomShock = (Math.random() - 0.5) * volatility;
+        
+        // Формула GBM для более реалистичного движения
+        const priceChange = Math.exp(drift + randomShock);
+        currency.price *= priceChange;
+        currency.price = Math.max(currency.price, 0.01); // Защита от отрицательных цен
+        
+        currency.history.push(currency.price);
+        if (currency.history.length > this.currentTimeframe.points) {
+            currency.history.shift();
+        }
+        
+        this.priceText.setText(`$${currency.price.toFixed(2)}`);
+        this.checkStopOrders();
+        this.updateChart();
+        this.updateUI();
     }
 
     // 🔥 ДОБАВЛЕНО: Изменение кредитного плеча
@@ -417,7 +495,6 @@ class GameScene extends Phaser.Scene {
         this.showMessage(`Position closed${leverageText}! P&L: $${profit.toFixed(2)}`, color);
     }
 
-    // 🔥 ИЗМЕНЕНО: Расчет прибыли с учетом плеча
     calculateCurrentProfit() {
         if (!this.hasPosition) return 0;
         
@@ -432,14 +509,307 @@ class GameScene extends Phaser.Scene {
         if (!this.hasPosition) return 0;
         
         const profit = this.calculateCurrentProfit();
-        const invested = this.position.invested;
+        const invested = this.position ? this.position.invested : 1;
         return (profit / invested) * 100;
     }
 
-    // 🔥 ДОБАВЛЕНО: Сохранение новых настроек
+    async setStopOrder() {
+        if (!this.hasPosition) return;
+        
+        if (this.position.type === 'long') {
+            this.stopLoss = this.position.entryPrice * 0.95;
+            this.takeProfit = this.position.entryPrice * 1.10;
+        } else {
+            this.stopLoss = this.position.entryPrice * 1.05;
+            this.takeProfit = this.position.entryPrice * 0.90;
+        }
+        
+        this.updateUI();
+        this.updateChart();
+        await this.saveGameData();
+        this.showMessage('Stop orders set', this.colors.secondary);
+    }
+
+    checkStopOrders() {
+        if (!this.hasPosition) return;
+        
+        const currentPrice = this.currentCurrency.price;
+        
+        if (this.position.type === 'long') {
+            if (this.stopLoss > 0 && currentPrice <= this.stopLoss) {
+                this.closePosition();
+                this.showMessage('STOP LOSS triggered', this.colors.danger);
+            }
+            if (this.takeProfit > 0 && currentPrice >= this.takeProfit) {
+                this.closePosition();
+                this.showMessage('TAKE PROFIT triggered', this.colors.success);
+            }
+        } else {
+            if (this.stopLoss > 0 && currentPrice >= this.stopLoss) {
+                this.closePosition();
+                this.showMessage('STOP LOSS triggered', this.colors.danger);
+            }
+            if (this.takeProfit > 0 && currentPrice <= this.takeProfit) {
+                this.closePosition();
+                this.showMessage('TAKE PROFIT triggered', this.colors.success);
+            }
+        }
+    }
+
+    updateChart() {
+        this.chart.clear();
+        this.ordersGraphics.clear();
+        
+        const { width, height } = this.cameras.main;
+        const chartWidth = width - this.layout.padding * 2 - 40;
+        const chartHeight = this.layout.chartHeight - 80;
+        const startX = this.layout.padding + 20;
+        const startY = this.layout.headerHeight + 50;
+        
+        const history = this.currentCurrency.history;
+        if (history.length < 2) return;
+        
+        const minPrice = Math.min(...history);
+        const maxPrice = Math.max(...history);
+        const range = maxPrice - minPrice || 1;
+        
+        // Clean chart line
+        this.chart.lineStyle(3, this.currentCurrency.color, 1);
+        
+        for (let i = 0; i < history.length - 1; i++) {
+            const x1 = startX + (i / (history.length - 1)) * chartWidth;
+            const y1 = startY + chartHeight - ((history[i] - minPrice) / range) * chartHeight;
+            const x2 = startX + ((i + 1) / (history.length - 1)) * chartWidth;
+            const y2 = startY + chartHeight - ((history[i + 1] - minPrice) / range) * chartHeight;
+            
+            this.chart.moveTo(x1, y1);
+            this.chart.lineTo(x2, y2);
+        }
+        
+        this.chart.strokePath();
+        
+        if (this.hasPosition) {
+            this.drawPositionMarkers(minPrice, maxPrice, startY, chartHeight, range, chartWidth, startX);
+        }
+    }
+
+    drawPositionMarkers(minPrice, maxPrice, startY, height, range, width, startX) {
+        const entryY = startY + height - ((this.position.entryPrice - minPrice) / range) * height;
+        const positionColor = this.position.type === 'long' ? this.colors.success : this.colors.danger;
+        
+        // Entry line
+        this.ordersGraphics.lineStyle(1, positionColor, 0.3);
+        this.drawDashedLine(this.ordersGraphics, startX, entryY, startX + width, entryY, 4, 3);
+        
+        // Entry marker
+        this.ordersGraphics.fillStyle(positionColor, 1);
+        this.ordersGraphics.fillCircle(startX + width + 4, entryY, 5);
+        
+        // Entry label
+        this.ordersGraphics.fillStyle(positionColor, 0.9);
+        this.ordersGraphics.fillRect(startX + width + 12, entryY - 10, 80, 20);
+        
+        const positionText = this.position.type === 'long' ? 'LONG' : 'SHORT';
+        this.add.text(startX + width + 16, entryY - 8, `${positionText} $${this.position.entryPrice.toFixed(2)}`, { 
+            fontSize: '9px',
+            fill: '#0D1421',
+            fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
+            fontWeight: '600'
+        });
+
+        // Stop Loss
+        if (this.stopLoss > 0) {
+            const stopY = startY + height - ((this.stopLoss - minPrice) / range) * height;
+            
+            this.ordersGraphics.lineStyle(2, this.colors.danger, 0.8);
+            this.ordersGraphics.lineBetween(startX, stopY, startX + width, stopY);
+            
+            this.ordersGraphics.fillStyle(this.colors.danger, 0.9);
+            this.ordersGraphics.fillRect(startX + 4, stopY - 9, 55, 18);
+            
+            this.add.text(startX + 8, stopY - 7, `SL $${this.stopLoss.toFixed(2)}`, { 
+                fontSize: '8px',
+                fill: '#FFFFFF',
+                fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
+                fontWeight: '600'
+            });
+        }
+        
+        // Take Profit
+        if (this.takeProfit > 0) {
+            const profitY = startY + height - ((this.takeProfit - minPrice) / range) * height;
+            
+            this.ordersGraphics.lineStyle(2, this.colors.success, 0.8);
+            this.ordersGraphics.lineBetween(startX, profitY, startX + width, profitY);
+            
+            this.ordersGraphics.fillStyle(this.colors.success, 0.9);
+            this.ordersGraphics.fillRect(startX + 4, profitY - 9, 60, 18);
+            
+            this.add.text(startX + 8, profitY - 7, `TP $${this.takeProfit.toFixed(2)}`, { 
+                fontSize: '8px',
+                fill: '#0D1421',
+                fontFamily: 'SF Pro Text, -apple-system, BlinkMacSystemFont',
+                fontWeight: '600'
+            });
+        }
+    }
+
+    drawDashedLine(graphics, x1, y1, x2, y2, dashLength, gapLength) {
+        const distance = Phaser.Math.Distance.Between(x1, y1, x2, y2);
+        const dashTotal = dashLength + gapLength;
+        const dashes = Math.floor(distance / dashTotal);
+        
+        for (let i = 0; i < dashes; i++) {
+            const dashProgress = (i * dashTotal) / distance;
+            const nextDashProgress = ((i * dashTotal) + dashLength) / distance;
+            
+            const dashX1 = Phaser.Math.Interpolation.Linear([x1, x2], dashProgress);
+            const dashY1 = Phaser.Math.Interpolation.Linear([y1, y2], dashProgress);
+            const dashX2 = Phaser.Math.Interpolation.Linear([x1, x2], nextDashProgress);
+            const dashY2 = Phaser.Math.Interpolation.Linear([y1, y2], nextDashProgress);
+            
+            graphics.lineBetween(dashX1, dashY1, dashX2, dashY2);
+        }
+    }
+
+    updateUI() {
+        this.balanceText.setText(`Balance: $${this.balance.toFixed(2)}`);
+        this.statsText.setText(this.getStatsString());
+        
+        if (this.hasPosition) {
+            const profit = this.calculateCurrentProfit();
+            const profitPercent = this.calculateProfitPercent();
+            
+            this.profitText.setText(`${profit >= 0 ? '+' : ''}${profit.toFixed(2)} (${profitPercent.toFixed(2)}%)`);
+            this.profitText.setFill(this.hexToColor(profit >= 0 ? this.colors.success : this.colors.danger));
+        } else {
+            this.profitText.setText('');
+        }
+        
+        this.updateButtonStates();
+        this.updatePositionInfo();
+    }
+
+    updateButtonStates() {
+        const hasPosition = this.hasPosition;
+        
+        this.longButton.setAlpha(hasPosition ? 0.5 : 1);
+        this.shortButton.setAlpha(hasPosition ? 0.5 : 1);
+        this.closeButton.setAlpha(hasPosition ? 1 : 0.5);
+        this.stopButton.setAlpha(hasPosition ? 1 : 0.5);
+    }
+
+    updatePositionInfo() {
+        if (this.hasPosition) {
+            const type = this.position.type.toUpperCase();
+            const entryPrice = this.position.entryPrice.toFixed(2);
+            const coins = this.position.coins;
+            const leverage = this.position.leverage;
+            
+            let info = `${type} ${leverage}x • $${entryPrice} • ${coins} coins`;
+            if (this.stopLoss > 0) info += ` • SL: $${this.stopLoss.toFixed(2)}`;
+            if (this.takeProfit > 0) info += ` • TP: $${this.takeProfit.toFixed(2)}`;
+            
+            this.positionInfo.setText(info);
+            this.positionInfo.setFill(this.hexToColor(this.position.type === 'long' ? this.colors.success : this.colors.danger));
+        } else {
+            this.positionInfo.setText('No active position');
+            this.positionInfo.setFill(this.hexToColor(this.colors.textSecondary));
+        }
+    }
+
+    getStatsString() {
+        return `Trades: ${this.stats.totalTrades} • Win: ${this.stats.successfulTrades} • P&L: $${this.stats.totalProfit.toFixed(2)}`;
+    }
+
+    showMessage(text, color) {
+        const centerX = this.cameras.main.width / 2;
+        const messageY = this.layout.headerHeight + this.layout.chartHeight / 2;
+        
+        const messageBg = this.add.rectangle(centerX, messageY, 280, 44, color)
+            .setAlpha(0.95);
+        
+        const message = this.add.text(centerX, messageY, text, {
+            fontSize: '14px',
+            fill: '#0D1421',
+            fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont',
+            fontWeight: '600'
+        }).setOrigin(0.5);
+        
+        this.tweens.add({
+            targets: [messageBg, message],
+            alpha: 0,
+            duration: 2000,
+            onComplete: () => {
+                messageBg.destroy();
+                message.destroy();
+            }
+        });
+    }
+
+    switchCurrency(direction) {
+        if (this.hasPosition) return;
+        
+        this.currentCurrencyIndex += direction;
+        if (this.currentCurrencyIndex < 0) {
+            this.currentCurrencyIndex = this.currencies.length - 1;
+        } else if (this.currentCurrencyIndex >= this.currencies.length) {
+            this.currentCurrencyIndex = 0;
+        }
+        
+        this.currencyIcon.setText(this.currentCurrency.icon);
+        this.currencyIcon.setFill(this.hexToColor(this.currentCurrency.color));
+        this.currencyText.setText(this.currentCurrency.name);
+        this.priceText.setText(`$${this.currentCurrency.price.toFixed(2)}`);
+        this.updateChart();
+        this.updateUI();
+    }
+
+    // 🔥 ВК ИНТЕГРАЦИЯ И СОХРАНЕНИЕ
+    async loadGameData() {
+        try {
+            if (window.VK) {
+                console.log('📥 Loading data from VK...');
+                const data = await VK.call('storage.get', { 
+                    keys: ['balance', 'position', 'stats', 'stopLoss', 'takeProfit', 'leverage', 'timeframe'] 
+                });
+                
+                if (data.balance) {
+                    this.balance = parseFloat(data.balance);
+                    console.log('✅ Balance loaded:', this.balance);
+                }
+                if (data.position && data.position !== 'null') {
+                    this.position = JSON.parse(data.position);
+                    console.log('✅ Position loaded:', this.position);
+                }
+                if (data.stats) {
+                    this.stats = JSON.parse(data.stats);
+                    console.log('✅ Stats loaded:', this.stats);
+                }
+                if (data.stopLoss) {
+                    this.stopLoss = parseFloat(data.stopLoss);
+                }
+                if (data.takeProfit) {
+                    this.takeProfit = parseFloat(data.takeProfit);
+                }
+                if (data.leverage) {
+                    this.leverage = parseInt(data.leverage);
+                }
+                if (data.timeframe) {
+                    this.currentTimeframeIndex = parseInt(data.timeframe);
+                }
+            } else {
+                console.log('⚠️ VK not available, using default data');
+            }
+        } catch (error) {
+            console.log('❌ Failed to load data:', error);
+        }
+    }
+
     async saveGameData() {
         try {
             if (window.VK) {
+                console.log('💾 Saving data to VK...');
                 await VK.call('storage.set', {
                     balance: this.balance.toString(),
                     position: JSON.stringify(this.position),
@@ -449,33 +819,78 @@ class GameScene extends Phaser.Scene {
                     leverage: this.leverage.toString(),
                     timeframe: this.currentTimeframeIndex.toString()
                 });
+                console.log('✅ Data saved successfully');
             }
         } catch (error) {
             console.log('❌ Failed to save data:', error);
         }
     }
 
-    // 🔥 ДОБАВЛЕНО: Загрузка новых настроек
-    async loadGameData() {
+    async shareResults() {
         try {
             if (window.VK) {
-                const data = await VK.call('storage.get', { 
-                    keys: ['balance', 'position', 'stats', 'stopLoss', 'takeProfit', 'leverage', 'timeframe'] 
-                });
+                const message = `🎯 My trading results:\n` +
+                               `Balance: $${this.balance.toFixed(2)}\n` +
+                               `Trades: ${this.stats.totalTrades}\n` +
+                               `Win Rate: ${this.stats.successfulTrades}\n` +
+                               `Total P&L: $${this.stats.totalProfit.toFixed(2)}\n\n` +
+                               `Try VKoin Trading! 🚀`;
                 
-                if (data.balance) this.balance = parseFloat(data.balance);
-                if (data.position && data.position !== 'null') this.position = JSON.parse(data.position);
-                if (data.stats) this.stats = JSON.parse(data.stats);
-                if (data.stopLoss) this.stopLoss = parseFloat(data.stopLoss);
-                if (data.takeProfit) this.takeProfit = parseFloat(data.takeProfit);
-                if (data.leverage) this.leverage = parseInt(data.leverage);
-                if (data.timeframe) this.currentTimeframeIndex = parseInt(data.timeframe);
+                await VK.call('share', {
+                    title: 'VKoin Trading Results',
+                    text: message,
+                    link: 'https://vk.com/app51602325' // Замени на реальный ID приложения
+                });
+            } else {
+                this.showMessage('Share feature available in VK!', this.colors.warning);
             }
         } catch (error) {
-            console.log('❌ Failed to load data:', error);
+            console.log('Share failed:', error);
+            this.showMessage('Share to VK!', this.colors.warning);
         }
     }
-
-    // Остальной код без изменений...
-    // (updateUI, updateChart, drawPositionMarkers, showMessage, switchCurrency и другие методы остаются прежними)
 }
+
+// Конфигурация для VK
+const config = {
+    type: Phaser.AUTO,
+    width: window.innerWidth,
+    height: window.innerHeight,
+    parent: 'game-container',
+    backgroundColor: 0x0D1421,
+    scene: GameScene,
+    scale: {
+        mode: Phaser.Scale.RESIZE,
+        autoCenter: Phaser.Scale.CENTER_BOTH
+    },
+    render: {
+        antialias: true,
+        roundPixels: true
+    }
+};
+
+// Инициализация VK Bridge
+window.addEventListener('DOMContentLoaded', async function() {
+    try {
+        // Инициализируем VK Bridge
+        if (window.VK) {
+            await VK.init();
+            console.log('✅ VK Bridge initialized');
+        }
+        
+        // Запускаем игру
+        setTimeout(() => {
+            const game = new Phaser.Game(config);
+            console.log('🎮 Phaser game started');
+            
+            window.addEventListener('resize', () => {
+                game.scale.refresh();
+            });
+            
+        }, 100);
+    } catch (error) {
+        console.error('❌ VK init failed:', error);
+        // Запускаем без VK
+        const game = new Phaser.Game(config);
+    }
+});
